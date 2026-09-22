@@ -594,6 +594,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#FAFAFA;}
                 <th>Total Entitled</th>
                 <th>PL/Sick Used</th>
                 <th>Available Balance</th>
+                <th>LWP Days</th>
                 <th>Comp-Off</th>
                 <th>Overtime</th>
                 <th>Other Time Off</th>
@@ -768,6 +769,16 @@ function empBal(id){
 function empAccrued(id){
   var e=ge(id); if(!e) return 0;
   return calcAccrued(e.doj, new Date().getFullYear());
+}
+
+// LWP days = days used beyond entitlement (excess PL/Sick over total entitled)
+function empLWP(id){
+  var e=ge(id); if(!e) return 0;
+  var accrued=calcAccrued(e.doj, new Date().getFullYear());
+  var totalEntitled=Math.round((e.cf+accrued)*100)/100;
+  var used=empUsed(id);
+  var excess=Math.round((used-totalEntitled)*100)/100;
+  return excess>0 ? excess : 0;
 }
 function loader(v){document.getElementById("loader").className="loader"+(v?" show":"");}
 function cm(id){document.getElementById(id).classList.remove("open");}
@@ -988,8 +999,9 @@ function renBal(){
   var accrued=calcAccrued(e.doj,new Date().getFullYear());
   var totalEntitled=Math.round((e.cf+accrued)*100)/100;
   var hdrEl=document.getElementById("bal-hdr");
+  var lwp=empLWP(id);
   var hdrDiv=document.createElement("div");
-  hdrDiv.style.cssText="background:var(--surface);border-radius:var(--radlg);border:1px solid var(--border);padding:1.25rem;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;gap:1rem;align-items:center;";
+  hdrDiv.style.cssText="background:var(--surface);border-radius:var(--radlg);border:1px solid var(--border);padding:1.25rem;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr"+(lwp>0?" 1fr":"")+";gap:1rem;align-items:center;";
   hdrDiv.innerHTML=
     "<div><div style='display:flex;align-items:center;gap:10px;'><div class='av "+avc(ri)+"' style='width:40px;height:40px;font-size:14px;'>"+ini(e.name)+"</div>"+
     "<div><div style='font-size:15px;font-weight:700;'>"+e.name+"</div>"+
@@ -998,8 +1010,20 @@ function renBal(){
     "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:var(--p600);'>"+accrued+"</div><div style='font-size:11px;color:var(--tm);'>Accrued (1.75/mo)</div></div>"+
     "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:#185FA5;'>"+totalEntitled+"</div><div style='font-size:11px;color:var(--tm);'>Total Entitled</div></div>"+
     "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:var(--r600);'>"+used+"</div><div style='font-size:11px;color:var(--tm);'>PL/Sick Used</div></div>"+
-    "<div style='text-align:center;'><div style='font-size:22px;font-weight:800;color:"+(bal<3?"var(--r600)":bal<8?"var(--a600)":"var(--g600)")+"'>"+bal+"</div><div style='font-size:11px;color:var(--tm);'>Available Balance</div></div>";
+    "<div style='text-align:center;'><div style='font-size:22px;font-weight:800;color:"+(bal<3?"var(--r600)":bal<8?"var(--a600)":"var(--g600)")+"'>"+bal+"</div><div style='font-size:11px;color:var(--tm);'>Available Balance</div></div>"+
+    (lwp>0?"<div style='text-align:center;background:var(--r50);border-radius:8px;padding:8px;'><div style='font-size:20px;font-weight:700;color:var(--r600);'>"+lwp+"</div><div style='font-size:11px;color:var(--r600);font-weight:600;'>LWP Days</div></div>":"");
   hdrEl.innerHTML="";hdrEl.appendChild(hdrDiv);
+
+  // Show LWP warning banner if applicable
+  var lwpWarn=document.getElementById("lwp-warning-"+id);
+  if(lwp>0){
+    var warnHtml="<div class='warn-box' style='margin-top:1rem;background:var(--r50);border-left-color:var(--r600);color:var(--r800);'>"+
+      "<strong>⚠️ Leave Without Pay Alert:</strong> "+e.name.split(" ")[0]+" has used "+used+" days of PL/Sick leave "+
+      "but is only entitled to "+totalEntitled+" days (CF "+e.cf+" + Accrued "+accrued+"). "+
+      "<strong>"+lwp+" day(s) will be treated as Leave Without Pay (LWP)</strong> and may result in salary deduction."+
+      "</div>";
+    hdrEl.insertAdjacentHTML("afterend", warnHtml);
+  }
 
   var html="";
   Object.keys(LCATS).forEach(function(cat){
@@ -1222,11 +1246,12 @@ function renSummaryRep() {
     var volHours  = getCatDays('Volunteer Hours');
     var loa       = getCatDays('Leave of Absence');
 
+    var lwpDays = Math.max(0, Math.round((plSickUsed - totalEntitled)*100)/100);
     var pct = Math.round((plSickUsed / Math.max(totalEntitled,1)) * 100);
     var ri = allEmps.indexOf(e);
-    var statusColor = available===0?'var(--r600)':available<=3?'var(--a600)':'var(--g600)';
-    var statusBadge = available===0?'bg-r':available<=3?'bg-a':'bg-g';
-    var statusText  = available===0?'Exhausted':available<=3?'Low':'Sufficient';
+    var statusColor = lwpDays>0?'var(--r600)':available===0?'var(--r600)':available<=3?'var(--a600)':'var(--g600)';
+    var statusBadge = lwpDays>0?'bg-r':available===0?'bg-r':available<=3?'bg-a':'bg-g';
+    var statusText  = lwpDays>0?'LWP ('+lwpDays+'d)':available===0?'Exhausted':available<=3?'Low':'Sufficient';
 
     return '<tr>'+
       '<td><div style="display:flex;align-items:center;gap:8px;">'+
@@ -1248,6 +1273,7 @@ function renSummaryRep() {
         '</div></td>'+
       '<td style="text-align:center;"><span style="font-size:16px;font-weight:800;color:'+statusColor+';">'+available+'</span>'+
         '<span style="font-size:11px;color:var(--tm);display:block;">of '+totalEntitled+'</span></td>'+
+      '<td style="text-align:center;">'+(lwpDays>0?'<span style="font-weight:700;color:var(--r600);">'+lwpDays+'</span>':'<span style="color:var(--g600);">—</span>')+'</td>'+
       '<td style="text-align:center;color:var(--t600);font-weight:600;">'+(compOff>0?compOff:'—')+'</td>'+
       '<td style="text-align:center;color:var(--a600);font-weight:600;">'+(overtime>0?overtime:'—')+'</td>'+
       '<td style="text-align:center;color:var(--p600);font-weight:600;">'+(otherTO>0?otherTO:'—')+'</td>'+
@@ -1293,7 +1319,7 @@ function expSummaryCSV() {
   var ef = document.getElementById('rep-emp') ? document.getElementById('rep-emp').value : '';
   var empList = ef ? allEmps.filter(function(e){ return e.id === ef; }) : allEmps;
   var rows = [['EMP ID','Employee Name','Vendor','Role','CF','Accrued','Total Entitled',
-               'PL/Sick Used','Available Balance','Comp-Off','Overtime','Other Time Off',
+               'PL/Sick Used','Available Balance','LWP Days','Comp-Off','Overtime','Other Time Off',
                'Volunteer Hours','Leave of Absence','Status']];
   empList.forEach(function(e) {
     var accrued = calcAccrued(e.doj, year);
@@ -1302,9 +1328,10 @@ function expSummaryCSV() {
       return l.eid===e.id&&l.status==='Approved'&&!isNonDeductible(l)&&new Date(l.from).getFullYear()===year;
     }).reduce(function(s,l){return s+l.days;},0);
     var available = Math.max(0, Math.round((totalEntitled - plSickUsed)*100)/100);
+    var lwpDays = Math.max(0, Math.round((plSickUsed - totalEntitled)*100)/100);
     function getCatDays(cat){return allLeaves.filter(function(l){return l.eid===e.id&&l.status==='Approved'&&l.cat===cat&&new Date(l.from).getFullYear()===year;}).reduce(function(s,l){return s+l.days;},0);}
     var status = available===0?'Exhausted':available<=3?'Low':'Sufficient';
-    rows.push([e.id,e.name,e.vendor,e.role,e.cf,accrued,totalEntitled,plSickUsed,available,
+    rows.push([e.id,e.name,e.vendor,e.role,e.cf,accrued,totalEntitled,plSickUsed,available,lwpDays||0,
       getCatDays('Comp-Off'),getCatDays('Overtime'),getCatDays('Other Time Off'),
       getCatDays('Volunteer Hours'),getCatDays('Leave of Absence'),status]);
   });
