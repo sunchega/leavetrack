@@ -159,6 +159,24 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#FAFAFA;}
 }
 
 @media(max-width:768px){
+  /* Balance header — stack metrics on mobile */
+  #bal-hdr > div > div{
+    grid-template-columns:1fr 1fr 1fr!important;
+    gap:.5rem!important;
+  }
+  /* Balance header inner div stack */
+  .bal-hdr-grid{
+    grid-template-columns:repeat(3,1fr)!important;
+    gap:.5rem!important;
+  }
+
+  /* Calendar — fit 7 columns on mobile */
+  .cal-grid{font-size:10px!important;}
+  .cal-day{min-height:52px!important;padding:3px!important;}
+  .cal-day-num{font-size:11px!important;}
+  .cal-name{font-size:9px!important;}
+  .cal-hdr span{font-size:10px!important;}
+
   /* Login page */
   #login-page{flex-direction:column;}
   .lp-left{min-height:220px;padding:1.5rem 1rem;justify-content:center;}
@@ -235,6 +253,19 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#FAFAFA;}
 
   /* Employee summary table */
   #summary-detail-card .tw table{min-width:800px;}
+
+  /* Balance header — responsive on mobile */
+  .bal-hdr-grid{
+    grid-template-columns:1fr 1fr 1fr!important;
+    gap:.5rem!important;
+    padding:1rem .75rem!important;
+  }
+  .bal-hdr-grid > div:first-child{
+    grid-column:1/-1!important;
+  }
+  .bal-hdr-grid > div{
+    text-align:center;
+  }
 
   /* Toast */
   .toast{bottom:70px;right:10px;left:10px;max-width:100%;}
@@ -1038,7 +1069,7 @@ function renBal(){
   var hdrEl=document.getElementById("bal-hdr");
   var lwp=empLWP(id);
   var hdrDiv=document.createElement("div");
-  hdrDiv.style.cssText="background:var(--surface);border-radius:var(--radlg);border:1px solid var(--border);padding:1.25rem;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr"+(lwp>0?" 1fr":"")+";gap:1rem;align-items:center;";
+  hdrDiv.style.cssText="background:var(--surface);border-radius:var(--radlg);border:1px solid var(--border);padding:1.25rem;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr"+(lwp>0?" 1fr":"")+";gap:.75rem;align-items:center;";hdrDiv.className='bal-hdr-grid';
   hdrDiv.innerHTML=
     "<div><div style='display:flex;align-items:center;gap:10px;'><div class='av "+avc(ri)+"' style='width:40px;height:40px;font-size:14px;'>"+ini(e.name)+"</div>"+
     "<div><div style='font-size:15px;font-weight:700;'>"+e.name+"</div>"+
@@ -1072,12 +1103,14 @@ function renBal(){
   Object.keys(LCATS).forEach(function(cat){
     var color=CCOLOR[cat]||"#888";
     html+="<div class='balc'><div class='balcat'>"+cat+"</div>";
+    var isNonDeductCat = NON_DEDUCTIBLE_CATS.indexOf(cat) > -1;
     LCATS[cat].forEach(function(type){
       var tU=allLeaves.filter(function(l){return l.eid===id&&l.type===type&&l.status==="Approved";}).reduce(function(s,l){return s+l.days;},0);
-      var pct=Math.min(100,Math.round((tU/Math.max(totalEntitled,1))*100));
+      var pct=isNonDeductCat ? Math.min(100, tU>0?100:0) : Math.min(100,Math.round((tU/Math.max(totalEntitled,1))*100));
+      var rightLabel=isNonDeductCat ? (tU>0?'non-deductible':'—') : 'of '+totalEntitled;
       html+="<div style='margin-bottom:8px;'><div class='balname'>"+type.split(/[>\/]/).pop().trim()+"</div>"+
         "<div class='balbg'><div class='balbar' style='width:"+pct+"%;background:"+color+";'></div></div>"+
-        "<div class='balnums'><span style='font-weight:600;'>"+tU+" used</span><span>of "+totalEntitled+"</span></div></div>";
+        "<div class='balnums'><span style='font-weight:600;'>"+tU+" used</span><span style='color:"+(isNonDeductCat?"var(--b600)":"var(--tm)")+"'>"+rightLabel+"</span></div></div>";
     });
     html+="</div>";
   });
