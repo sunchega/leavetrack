@@ -521,10 +521,6 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#FAFAFA;}
         </div>
       </div>
       <div class="warn-box">Employee records are never deleted. Deactivating an employee preserves all their leave history.</div>
-      <div class="info-box" id="correction-box" style="display:none;">
-        <strong>⚠️ Data Correction Required:</strong> Some leaves were incorrectly deducted from balance under non-deductible categories.
-        <button onclick="runDataCorrection()" class="btn btn-p" style="margin-left:10px;padding:5px 12px;font-size:12px;">Fix Now — Restore Balances</button>
-      </div>
       <div class="mrow" id="emm"></div>
       <div class="card">
         <div class="ch"><span class="ct">Team roster</span>
@@ -1178,41 +1174,9 @@ function renEmp(){
   document.getElementById("eb").innerHTML=data.map(function(e){var ri=allEmps.indexOf(e);var used=empUsed(e.id);var bal=empBal(e.id);return "<tr><td><div style=\"display:flex;align-items:center;gap:8px;\"><div class=\"av "+avc(ri)+"\">"+ini(e.name)+"</div><div><div style=\"font-size:13px;font-weight:500;\">"+e.name+"</div><div style=\"font-size:11px;color:var(--tm);\">"+e.email+"</div></div></div></td><td style=\"font-family:monospace;font-size:12px;color:var(--ts);\">"+e.id+"</td><td><span class=\"badge "+(VBADGE[e.vendor]||"bg-gr")+"\" style=\"font-size:10.5px;\">"+e.vendor+"</span></td><td style=\"font-size:12px;color:var(--ts);\">"+e.role+"</td><td style=\"font-size:12px;color:var(--tm);\">"+fd(e.doj)+"</td><td style=\"font-weight:600;color:var(--b600);text-align:center;\">"+e.cf+"</td><td style=\"font-weight:600;color:var(--p600);text-align:center;\">"+e.intake+"</td><td style=\"text-align:center;\"><span style=\"font-weight:700;color:"+(bal<3?"var(--r600)":bal<8?"var(--a600)":"var(--g600)")+";\">"+ bal+"</span><span style=\"font-size:11px;color:var(--tm);\"> / "+e.bal+"</span></td><td><div style=\"display:flex;gap:4px;\"><button class=\"bico\" onclick=\"editEmp('"+e.id+"')\" title=\"Edit\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7\"/><path d=\"M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z\"/></svg></button><button class=\"bico\" onclick=\"openAdminPwReset('"+e.id+"')\" title=\"Reset password\" style=\"border-color:var(--b600);color:var(--b600);\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\"/><path d=\"M7 11V7a5 5 0 0110 0v4\"/></svg></button><button class=\"bico del\" onclick=\"confRem('"+e.id+"')\" title=\"Deactivate\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><line x1=\"23\" y1=\"1\" x2=\"17\" y2=\"7\"/></svg></button></div></td></tr>";}).join("");
 }
 function renEmpM(){
-  checkCorrectionNeeded();
   var v=allEmps.map(function(e){return e.vendor;}).filter(function(v,i,a){return a.indexOf(v)===i;}).length;
   document.getElementById("emm").innerHTML=mc("var(--p50)","var(--p600)","<path d=\"M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/>",allEmps.length,"Active employees")+mc("var(--b50)","var(--b600)","<path d=\"M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z\"/>",v,"Vendors")+mc("var(--a50)","var(--a600)","<line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"23\"/>",allEmps.reduce(function(s,e){return s+e.cf;},0).toFixed(2),"Total carry fwd")+mc("var(--g50)","var(--g600)","<polyline points=\"20 6 9 17 4 12\"/>",allEmps.reduce(function(s,e){return s+e.bal;},0).toFixed(2),"Total balance pool");
 }
-// ── DATA CORRECTION: Fix non-deductible category balances ────────────────────
-async function runDataCorrection(){
-  if(!confirm("This will restore leave balances for Pravin Landge (10 days) and Santosh Kumar (3 days) by marking their non-deductible leaves correctly. Proceed?")) return;
-  try{
-    var res = await api("POST","/api/admin/fix-nondeductible",{});
-    showToast(res.message,"success");
-    document.getElementById("correction-box").style.display="none";
-    // Reload data
-    var er=await api("GET","/api/employees");
-    allEmps=er.filter(function(e){return !e.inactive;});
-    allLeaves=await api("GET","/api/leaves");
-    renEmp();renEmpM();renDash();renBal();
-    // Show correction details
-    if(res.details && res.details.length){
-      var detail=res.details.map(function(d){return d.emp+": "+d.days+" days";}).join(", ");showToast("Fixed "+res.corrected+" records: "+detail,"success");
-    }
-  }catch(e){}
-}
-
-// Show correction button for admin on employees page
-function checkCorrectionNeeded(){
-  var box=document.getElementById("correction-box");
-  if(!box||!cu||cu.role!=="admin") return;
-  // Check if any approved non-comp-off non-deductible leaves exist with isCompOff=false
-  var needsCorrection=allLeaves.some(function(l){
-    return l.status==="Approved" && !l.isCompOff &&
-      ["Overtime","Other Time Off","Volunteer Hours","Leave of Absence"].indexOf(l.cat)>-1;
-  });
-  box.style.display=needsCorrection?"":"none";
-}
-
 function openEM(){eeIdx=null;document.getElementById("emtit").textContent="Add new employee";["ef-name","ef-id","ef-email","ef-role","ef-pw"].forEach(function(id){document.getElementById(id).value="";});document.getElementById("ef-id").disabled=false;document.getElementById("ef-doj").value=tod();document.getElementById("ef-cf").value=0;document.getElementById("ef-int").value=21;document.getElementById("mem").classList.add("open");}
 function editEmp(eid){var e=allEmps.find(function(x){return x.id===eid;});if(!e)return;eeIdx=eid;document.getElementById("emtit").textContent="Edit employee";document.getElementById("ef-name").value=e.name;document.getElementById("ef-id").value=e.id;document.getElementById("ef-id").disabled=true;document.getElementById("ef-email").value=e.email;document.getElementById("ef-vendor").value=e.vendor;document.getElementById("ef-role").value=e.role;document.getElementById("ef-doj").value=e.doj||"";document.getElementById("ef-pw").value="";document.getElementById("ef-cf").value=e.cf;document.getElementById("ef-int").value=e.intake;document.getElementById("mem").classList.add("open");}
 async function saveEmp(){

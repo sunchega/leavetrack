@@ -420,7 +420,7 @@ app.post('/api/admin/carry-forward', adminRequired, async (req, res) => {
       ]);
       const usedDays = used.length > 0 ? used[0].total : 0;
       const remaining = Math.max(0, emp.bal - usedDays);
-      const newCF = Math.min(remaining, 21); // max 21 days carry forward
+      const newCF = Math.min(remaining, 10); // max 10 days carry forward — rest lapses
       const newIntake = 21;
       const newBal = newCF + newIntake;
       await Employee.findOneAndUpdate(
