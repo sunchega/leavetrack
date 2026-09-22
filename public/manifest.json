@@ -1,0 +1,24 @@
+{
+  "name": "LeaveTrack",
+  "short_name": "LeaveTrack",
+  "description": "Leave Management Portal",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1E1A3C",
+  "theme_color": "#1E1A3C",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='40' fill='%23534AB7'/><path d='M96 40a56 56 0 110 112 56 56 0 010-112zm0 28a28 28 0 100 56 28 28 0 000-56zm0 72c-18.7 0-56 9.38-56 28v14h112v-14c0-18.62-37.3-28-56-28z' fill='white'/></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='100' fill='%23534AB7'/><path d='M256 80a176 176 0 110 352 176 176 0 010-352zm0 88a88 88 0 100 176 88 88 0 000-176zm0 188c-48.7 0-144 24.38-144 72v40h288v-40c0-47.62-95.3-72-144-72z' fill='white'/></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

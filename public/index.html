@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LeaveTrack — Leave Management Portal</title>
+<meta name="description" content="LeaveTrack Leave Management Portal">
+<meta name="theme-color" content="#1E1A3C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LeaveTrack">
+<link rel="manifest" href="/manifest.json">
+<style>
+:root{--p50:#EEEDFE;--p100:#CECBF6;--p400:#7F77DD;--p600:#534AB7;--p800:#3C3489;--p900:#26215C;--t50:#E1F5EE;--t600:#0F6E56;--t800:#085041;--b50:#E6F1FB;--b600:#185FA5;--b800:#0C447C;--g50:#EAF3DE;--g600:#3B6D11;--g800:#27500A;--a50:#FAEEDA;--a600:#854F0B;--r50:#FCEBEB;--r600:#A32D2D;--r800:#791F1F;--gray50:#F1EFE8;--gray600:#5F5E5A;--co50:#FAECE7;--co600:#993C1D;--bg:#F4F3F8;--surface:#FFF;--sbg:#1E1A3C;--stext:#C8C4F0;--tp:#1A1A2E;--ts:#5F5E6E;--tm:#9997A8;--border:#E4E3EC;--rad:10px;--radlg:14px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--tp);}
+#login-page{min-height:100vh;display:flex;align-items:stretch;}
+.lp-left{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;background:linear-gradient(145deg,#26215C,#1E1A3C,#12103A);position:relative;overflow:hidden;}
+.lp-left::before{content:"";position:absolute;width:500px;height:500px;border-radius:50%;background:rgba(127,119,221,.07);top:-150px;left:-150px;}
+.lp-left::after{content:"";position:absolute;width:350px;height:350px;border-radius:50%;background:rgba(127,119,221,.05);bottom:-100px;right:-80px;}
+.lp-brand{z-index:1;text-align:center;}
+.lp-logo{width:80px;height:80px;background:var(--p600);border-radius:22px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;box-shadow:0 10px 40px rgba(83,74,183,.45);}
+.lp-logo svg{width:42px;height:42px;fill:#fff;}
+.lp-company{font-size:13px;font-weight:600;color:rgba(200,196,240,.6);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px;}
+.lp-title{font-size:36px;font-weight:800;color:#fff;letter-spacing:-.5px;line-height:1.1;}
+.lp-title span{color:var(--p400);}
+.lp-tagline{font-size:14px;color:rgba(200,196,240,.65);margin-top:10px;line-height:1.6;}
+.lp-divider{width:48px;height:3px;background:var(--p400);border-radius:2px;margin:1.75rem auto;}
+.lp-info{display:flex;flex-direction:column;gap:10px;width:100%;max-width:280px;}
+.lp-info-item{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:10px 14px;}
+.lp-info-icon{width:32px;height:32px;border-radius:8px;background:rgba(127,119,221,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.lp-info-icon svg{width:16px;height:16px;fill:var(--p400);}
+.lp-info-text{font-size:12.5px;color:rgba(200,196,240,.8);line-height:1.4;}
+.lp-info-text strong{color:#fff;display:block;font-size:13px;}
+.lp-right{width:440px;display:flex;align-items:center;justify-content:center;background:#fff;padding:2.5rem;}
+.login-card{width:100%;max-width:360px;}
+.lc-head{margin-bottom:2rem;}
+.lc-head h2{font-size:24px;font-weight:700;color:var(--tp);}
+.lc-head p{font-size:13px;color:var(--ts);margin-top:5px;}
+.fg{margin-bottom:1rem;}
+.fg label{display:block;font-size:12px;font-weight:600;color:var(--ts);margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
+.fg input,.fg select{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:var(--rad);font-size:14px;color:var(--tp);outline:none;transition:border-color .2s;background:#fff;}
+.fg input:focus,.fg select:focus{border-color:var(--p600);}
+.lbtn{width:100%;padding:12px;background:var(--p600);color:#fff;border:none;border-radius:var(--rad);font-size:15px;font-weight:600;cursor:pointer;margin-top:.5rem;transition:background .2s;}
+.lbtn:hover{background:var(--p800);}
+.lerr{background:var(--r50);color:var(--r600);font-size:13px;padding:10px 14px;border-radius:var(--rad);margin-top:10px;display:none;}
+.lfoot{text-align:center;font-size:11.5px;color:var(--tm);margin-top:1.5rem;line-height:1.8;}
+#app{display:none;min-height:100vh;}
+.sidebar{width:245px;min-height:100vh;background:var(--sbg);position:fixed;top:0;left:0;z-index:100;display:flex;flex-direction:column;overflow-y:auto;overflow-x:hidden;}
+.sb-logo{padding:1.25rem 1.5rem 1rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.07);}
+.sb-logo-icon{width:36px;height:36px;background:var(--p600);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.sb-logo-icon svg{width:20px;height:20px;fill:#fff;}
+.sb-logo-name{font-size:15px;font-weight:700;color:#fff;}.sb-logo-tag{font-size:10px;color:rgba(200,196,240,.55);}
+.sb-user{padding:.875rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.07);display:flex;align-items:center;gap:10px;}
+.sb-av{width:36px;height:36px;border-radius:50%;background:var(--p400);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0;}
+.sb-uname{font-size:13px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sb-role{font-size:11px;color:rgba(200,196,240,.6);}
+.sb-nav{flex:1;padding:.5rem 0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.nav-sec{padding:.5rem 1.5rem .2rem;font-size:10px;font-weight:700;color:rgba(200,196,240,.35);text-transform:uppercase;letter-spacing:.08em;}
+.ni{display:flex;align-items:center;gap:10px;padding:9px 1.5rem;font-size:13px;color:var(--stext);cursor:pointer;transition:all .15s;border-left:3px solid transparent;}
+.ni:hover{background:rgba(127,119,221,.12);color:#fff;}.ni.active{background:rgba(127,119,221,.2);color:#fff;border-left-color:var(--p400);}
+.ni svg{width:17px;height:17px;flex-shrink:0;opacity:.7;}.ni.active svg,.ni:hover svg{opacity:1;}
+.sb-bot{padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0;}
+.logout{display:flex;align-items:center;gap:8px;font-size:13px;color:rgba(200,196,240,.55);cursor:pointer;transition:color .15s;}
+.logout:hover{color:#fff;}.logout svg{width:16px;height:16px;}
+.main{margin-left:245px;min-height:100vh;padding:1.75rem 2rem;}
+.page{display:none;}.page.active{display:block;}
+.ph{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:12px;}
+.pt{font-size:21px;font-weight:700;color:var(--tp);}.ps{font-size:13.5px;color:var(--ts);margin-top:3px;}
+.mrow{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:1.5rem;}
+.mc{background:var(--surface);border-radius:var(--radlg);padding:1.1rem 1.25rem;border:1px solid var(--border);}
+.mc-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:.6rem;}
+.mc-icon svg{width:19px;height:19px;}.mc-val{font-size:24px;font-weight:700;color:var(--tp);line-height:1;}.mc-lab{font-size:12px;color:var(--tm);margin-top:3px;}
+.card{background:var(--surface);border-radius:var(--radlg);border:1px solid var(--border);overflow:hidden;margin-bottom:1.5rem;}
+.ch{padding:.875rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.ct{font-size:14.5px;font-weight:600;color:var(--tp);}.tw{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+th{font-size:11.5px;font-weight:600;color:var(--tm);text-align:left;padding:9px 13px;background:#FAFAF8;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{font-size:13px;padding:10px 13px;border-bottom:1px solid var(--border);color:var(--tp);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}tr:hover td{background:#FAFAFA;}
+.badge{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500;}
+.bg-g{background:var(--g50);color:var(--g600);}.bg-r{background:var(--r50);color:var(--r600);}.bg-a{background:var(--a50);color:var(--a600);}
+.bg-b{background:var(--b50);color:var(--b600);}.bg-p{background:var(--p50);color:var(--p800);}.bg-gr{background:var(--gray50);color:var(--gray600);}
+.bg-co{background:var(--co50);color:var(--co600);}
+.vb-q{background:#E6F7FF;color:#0A5C8C;}.vb-c{background:#FFF3E0;color:#7A4100;}.vb-a{background:#F3E5F5;color:#6A1B9A;}
+.vb-e{background:#E8F5E9;color:#1B5E20;}.vb-i{background:#FFF8E1;color:#856404;}
+.btn{padding:8px 15px;border-radius:var(--rad);font-size:13px;font-weight:500;cursor:pointer;border:none;display:inline-flex;align-items:center;gap:6px;transition:all .15s;}
+.btn-p{background:var(--p600);color:#fff;}.btn-p:hover{background:var(--p800);}
+.btn-o{background:#fff;color:var(--tp);border:1px solid var(--border);}.btn-o:hover{background:var(--bg);}
+.btn-d{background:var(--r50);color:var(--r600);border:1px solid #F09595;}
+.bico{padding:5px;border-radius:8px;background:transparent;border:1px solid var(--border);color:var(--ts);cursor:pointer;display:inline-flex;align-items:center;transition:all .15s;}
+.bico:hover{background:var(--bg);}.bico.del:hover{background:var(--r50);color:var(--r600);border-color:#F09595;}
+.bico.app:hover{background:var(--g50);color:var(--g600);border-color:#C0DD97;}
+.av{width:30px;height:30px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;}
+.av0{background:var(--p50);color:var(--p800);}.av1{background:var(--t50);color:var(--t800);}.av2{background:var(--b50);color:var(--b800);}
+.av3{background:var(--co50);color:var(--co600);}.av4{background:var(--g50);color:var(--g800);}.av5{background:var(--a50);color:var(--a600);}
+.mw{display:none;position:fixed;inset:0;z-index:500;background:rgba(30,26,60,.5);align-items:center;justify-content:center;padding:1rem;}
+.mw.open{display:flex;}
+.modal{background:#fff;border-radius:var(--radlg);padding:1.75rem;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.mtitle{font-size:16px;font-weight:700;margin-bottom:1.25rem;color:var(--tp);display:flex;align-items:center;gap:8px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}.frow.s1{grid-template-columns:1fr;}
+.fg2 label{display:block;font-size:11px;font-weight:700;color:var(--ts);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.fg2 input,.fg2 select,.fg2 textarea{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:var(--rad);font-size:13px;color:var(--tp);outline:none;background:#fff;transition:border-color .2s;}
+.fg2 input:focus,.fg2 select:focus,.fg2 textarea:focus{border-color:var(--p600);}
+.fg2 textarea{resize:vertical;min-height:72px;}
+.ma{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--border);}
+.sbox{position:relative;display:flex;align-items:center;}
+.sbox svg{position:absolute;left:9px;width:14px;height:14px;color:var(--tm);}
+.sbox input{padding:8px 12px 8px 30px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;outline:none;background:#fff;width:210px;}
+.sbox input:focus{border-color:var(--p600);}
+.balg{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:11px;margin-bottom:1.5rem;}
+.balc{background:#fff;border-radius:var(--rad);border:1px solid var(--border);padding:.9rem;}
+.balcat{font-size:10px;font-weight:700;color:var(--tm);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px;}
+.balname{font-size:12.5px;font-weight:600;color:var(--tp);margin-bottom:7px;line-height:1.3;}
+.balbg{height:5px;background:var(--gray50);border-radius:3px;overflow:hidden;margin-bottom:5px;}
+.balbar{height:5px;border-radius:3px;}.balnums{display:flex;justify-content:space-between;font-size:11px;color:var(--tm);}
+.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.dl{text-align:center;font-size:10.5px;font-weight:600;color:var(--tm);padding:5px 0;}
+.dc{min-height:54px;border-radius:8px;border:1px solid transparent;padding:4px 5px;}
+.dc.hl{background:var(--p50);border-color:var(--p100);}.dc.tod{border-color:var(--p600)!important;}.dc.om{opacity:.3;}
+.dn{font-size:11.5px;font-weight:500;color:var(--tp);}
+.lpip{font-size:9px;padding:1px 5px;border-radius:4px;margin-top:2px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;background:var(--p50);color:var(--p800);}
+.mchip{padding:5px 13px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;border:1.5px solid var(--border);background:#fff;color:var(--ts);transition:all .15s;}
+.mchip.active{background:var(--p600);color:#fff;border-color:var(--p600);}
+.toast{position:fixed;bottom:22px;right:22px;padding:11px 16px;border-radius:var(--rad);font-size:13px;font-weight:500;display:none;align-items:center;gap:8px;z-index:9999;max-width:340px;box-shadow:0 4px 20px rgba(0,0,0,.12);}
+.toast.show{display:flex;}
+.ts{background:var(--g50);color:var(--g800);border:1px solid #C0DD97;}
+.td{background:var(--r50);color:var(--r800);border:1px solid #F09595;}
+.ti{background:var(--p50);color:var(--p800);border:1px solid var(--p100);}
+.loader{display:none;position:fixed;inset:0;background:rgba(255,255,255,.65);z-index:9998;align-items:center;justify-content:center;}
+.loader.show{display:flex;}
+.spin{width:36px;height:36px;border:3px solid var(--p100);border-top-color:var(--p600);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.info-box{padding:10px 12px;background:var(--p50);border-radius:var(--rad);font-size:13px;color:var(--p800);border-left:3px solid var(--p400);margin-bottom:1rem;}
+.warn-box{padding:10px 12px;background:var(--a50);border-radius:var(--rad);font-size:13px;color:var(--a600);border-left:3px solid var(--a600);margin-bottom:1rem;}
+
+/* ── MOBILE RESPONSIVE ───────────────────────────────────────────────── */
+.hamburger{display:none;position:fixed;top:12px;left:12px;z-index:200;
+  width:40px;height:40px;border-radius:10px;background:var(--sbg);border:none;
+  cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px;}
+.hamburger span{display:block;width:20px;height:2px;background:#fff;border-radius:2px;transition:all .3s;}
+.sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:99;}
+
+@media(max-width:768px) and (orientation:landscape){
+  .sidebar{
+    max-height:100vh;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    -webkit-overflow-scrolling:touch;
+  }
+  .sb-nav{
+    overflow-y:auto!important;
+    flex:1;
+  }
+  .lp-left{min-height:160px;padding:1rem;}
+  .lp-logo{width:44px;height:44px;margin-bottom:.5rem;}
+  .lp-title{font-size:22px;}
+  .lp-tagline{font-size:11px;margin-top:4px;}
+}
+
+@media(max-width:768px){
+  /* Login page */
+  #login-page{flex-direction:column;}
+  .lp-left{min-height:220px;padding:1.5rem 1rem;justify-content:center;}
+  .lp-logo{width:56px;height:56px;border-radius:14px;margin-bottom:1rem;}
+  .lp-logo svg{width:30px;height:30px;}
+  .lp-title{font-size:26px;}
+  .lp-tagline{font-size:12px;}
+  .lp-right{width:100%;padding:1.5rem 1rem;}
+  .login-card{max-width:100%;}
+
+  /* Sidebar — hidden by default on mobile */
+  .sidebar{
+    transform:translateX(-100%);
+    transition:transform .3s ease;
+    z-index:150;
+    height:100vh;
+    max-height:100vh;
+    overflow-y:auto!important;
+    overflow-x:hidden;
+    -webkit-overflow-scrolling:touch;
+    display:flex;
+    flex-direction:column;
+  }
+  .sidebar.open{transform:translateX(0);}
+  .sb-overlay.show{display:block;}
+  .sb-nav{
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch;
+    flex:1;
+    min-height:0;
+  }
+
+  /* Hamburger button */
+  .hamburger{display:flex;}
+
+  /* Main content — full width on mobile */
+  .main{margin-left:0;padding:1rem;padding-top:60px;}
+
+  /* Cards and grids */
+  .mrow{grid-template-columns:repeat(2,1fr);}
+  .balg{grid-template-columns:1fr;}
+
+  /* Dashboard two-col grid → single col */
+  .main > div[style*="grid-template-columns:1.4fr"]{display:block!important;}
+  .main > div[style*="grid-template-columns:1.4fr"] .card{margin-bottom:1rem;}
+
+  /* Charts two-col → single col */
+  div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important;}
+
+  /* Apply leave two-col → single col */
+  div[style*="grid-template-columns:1fr 1fr;gap:1.5rem"]{grid-template-columns:1fr!important;}
+
+  /* Tables — horizontal scroll */
+  .tw{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  table{min-width:600px;}
+
+  /* Page header */
+  .ph{flex-direction:column;gap:8px;}
+  .ph .pt{font-size:18px;}
+
+  /* Modal */
+  .modal{padding:1.25rem;margin:0.5rem;}
+  .frow{grid-template-columns:1fr!important;}
+
+  /* Month chips wrap */
+  #mcs{gap:4px;}
+  .mchip{font-size:11px;padding:4px 10px;}
+
+  /* Balance header grid → single col */
+  div[style*="grid-template-columns:2fr 1fr 1fr 1fr 1fr"]{
+    grid-template-columns:1fr 1fr!important;
+    gap:.5rem!important;
+  }
+
+  /* Employee summary table */
+  #summary-detail-card .tw table{min-width:800px;}
+
+  /* Toast */
+  .toast{bottom:70px;right:10px;left:10px;max-width:100%;}
+
+  /* PWA banner */
+  #pwa-banner{padding:10px 12px;}
+}
+
+@media(max-width:400px){
+  .mrow{grid-template-columns:1fr 1fr;}
+  .mc-val{font-size:20px;}
+}
+
+/* ── SECURITY FEATURES ───────────────────────────────────────────────── */
+/* Screen blur overlay */
+#security-blur{display:none;position:fixed;inset:0;z-index:9000;
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  background:rgba(30,26,60,.7);align-items:center;justify-content:center;flex-direction:column;}
+#security-blur.show{display:flex;}
+.blur-box{background:#fff;border-radius:var(--radlg);padding:2rem;text-align:center;max-width:340px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+.blur-icon{font-size:48px;margin-bottom:.75rem;}
+.blur-title{font-size:18px;font-weight:700;color:var(--tp);margin-bottom:.5rem;}
+.blur-sub{font-size:13px;color:var(--ts);margin-bottom:1.25rem;}
+.blur-btn{width:100%;padding:11px;background:var(--p600);color:#fff;border:none;border-radius:var(--rad);font-size:14px;font-weight:600;cursor:pointer;}
+.blur-btn:hover{background:var(--p800);}
+
+/* Timeout warning banner */
+#timeout-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:8999;
+  background:#A32D2D;color:#fff;padding:10px 16px;
+  align-items:center;justify-content:center;gap:12px;font-size:13px;font-weight:500;}
+#timeout-banner.show{display:flex;}
+#timeout-countdown{font-weight:700;font-size:15px;}
+
+/* Refresh button + security bar in main header */
+.main-topbar{display:flex;align-items:center;justify-content:flex-end;gap:8px;
+  padding:8px 0 1rem 0;border-bottom:1px solid var(--border);margin-bottom:1.25rem;}
+.topbar-time{font-size:12px;color:var(--tm);}
+.topbar-refresh{display:flex;align-items:center;gap:6px;padding:7px 14px;
+  background:var(--p50);color:var(--p600);border:1px solid var(--p100);
+  border-radius:var(--rad);font-size:12.5px;font-weight:500;cursor:pointer;transition:all .2s;}
+.topbar-refresh:hover{background:var(--p600);color:#fff;}
+.topbar-refresh.spinning svg{animation:spin .7s linear infinite;}
+.topbar-security{display:flex;align-items:center;gap:5px;padding:7px 12px;
+  background:var(--g50);color:var(--g600);border:1px solid #C0DD97;
+  border-radius:var(--rad);font-size:12px;font-weight:500;}
+
+@media(max-width:768px){
+  .main-topbar{padding:8px 0 .75rem 0;}
+  .topbar-time{display:none;}
+}
+</style>
+</head>
+<body>
+<div id="loader" class="loader"><div class="spin"></div></div>
+
+<!-- LOGIN PAGE -->
+<div id="login-page">
+  <div class="lp-left">
+    <div class="lp-brand">
+      <div class="lp-logo">
+        <svg viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 3a4 4 0 110 8 4 4 0 010-8zm0 10c-2.67 0-8 1.34-8 4v1h16v-1c0-2.66-5.33-4-8-4z"/></svg>
+      </div>
+      <div class="lp-title">Leave<span>Track</span></div>
+      <div class="lp-tagline">Leave Management Portal</div>
+    </div>
+  </div>
+  <div class="lp-right">
+    <div class="login-card">
+      <div class="lc-head">
+        <h2>Welcome back</h2>
+        <p>Sign in to access your leave portal</p>
+      </div>
+      <div class="fg"><label>Username</label><input type="text" id="inp-user" placeholder="First name or Employee ID" autocomplete="username"></div>
+      <div class="fg"><label>Password</label><input type="password" id="inp-pass" placeholder="Enter your password" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <div class="fg"><label>Login as</label>
+        <select id="inp-role">
+          <option value="employee">Employee</option>
+          <option value="admin">Admin (Suhas Unchegaonkar)</option>
+        </select>
+      </div>
+      <button class="lbtn" onclick="doLogin()">Sign in &rarr;</button>
+      <div class="lerr" id="lerr"></div>
+      <div class="lfoot">LeaveTrack v2.4</div>
+    </div>
+  </div>
+</div>
+
+<!-- APP SHELL -->
+<div id="app">
+  <!-- SECURITY: Timeout warning banner -->
+  <div id="timeout-banner">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Session expiring in <span id="timeout-countdown">2:00</span> due to inactivity —
+    <button onclick="resetIdleTimer()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;padding:4px 12px;border-radius:6px;cursor:pointer;font-size:12px;margin-left:4px;">Stay logged in</button>
+  </div>
+
+  <!-- SECURITY: Screen blur on idle -->
+  <div id="security-blur">
+    <div class="blur-box">
+      <div class="blur-icon">🔒</div>
+      <div class="blur-title">Session Paused</div>
+      <div class="blur-sub">Your session was paused after 5 minutes of inactivity. Click below to continue.</div>
+      <button class="blur-btn" onclick="unblurScreen()">Click to Continue</button>
+    </div>
+  </div>
+
+  <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+  <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="sb-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+  <div class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon"><svg viewBox="0 0 24 24"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2zm-7 3a4 4 0 110 8 4 4 0 010-8zm0 10c-2.67 0-8 1.34-8 4v1h16v-1c0-2.66-5.33-4-8-4z"/></svg></div>
+      <div><div class="sb-logo-name">LeaveTrack</div><div class="sb-logo-tag">Leave Management Portal</div></div>
+    </div>
+    <div class="sb-user">
+      <div class="sb-av" id="sb-av">S</div>
+      <div><div class="sb-uname" id="sb-un">User</div><div class="sb-role" id="sb-rl">Employee</div></div>
+    </div>
+    <nav class="sb-nav">
+      <div class="nav-sec">Main</div>
+      <div class="ni active" id="ni-dashboard" onclick="gp('dashboard',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Dashboard</div>
+      <div class="ni" id="ni-apply" onclick="gp('apply',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="11" x2="12" y2="17"/><line x1="9" y1="14" x2="15" y2="14"/></svg>Apply for Leave</div>
+      <div class="ni" id="ni-balance" onclick="gp('balance',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Leave Balance</div>
+      <div class="ni" id="ni-calendar" onclick="gp('calendar',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span id="cal-nav-lbl">My Calendar</span></div>
+      <div class="ni" id="ni-timeline" onclick="gp('timeline',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Leave Timeline</div>
+      <div class="ni" id="ni-pwreset" onclick="gp('pwreset',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Change Password</div>
+      <div class="nav-sec" id="mns" style="display:none">Admin</div>
+      <div class="ni" id="ni-charts" style="display:none" onclick="gp('charts',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="3" y1="20" x2="21" y2="20"/></svg>Charts &amp; Analytics</div>
+      <div class="ni" id="ni-approvals" style="display:none" onclick="gp('approvals',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>Approvals<span id="abadge" style="margin-left:auto;background:#E24B4A;color:#fff;font-size:10px;padding:1px 7px;border-radius:10px;display:none;"></span></div>
+      <div class="ni" id="ni-employees" style="display:none" onclick="gp('employees',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>Employees</div>
+      <div class="ni" id="ni-report" style="display:none" onclick="gp('report',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>Reports</div>
+    </nav>
+    <div class="sb-bot"><div class="logout" onclick="doLogout()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>Sign out</div></div>
+  </div>
+
+  <div class="main">
+    <!-- SECURITY TOPBAR: refresh + session info -->
+    <div class="main-topbar" id="main-topbar" style="display:none;">
+      <span class="topbar-security">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+        Secured session
+      </span>
+      <span class="topbar-time" id="topbar-lastactive"></span>
+      <button class="topbar-refresh" id="refresh-btn" onclick="refreshAllData()" title="Refresh all data from server">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+        Refresh Data
+      </button>
+    </div>
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="ph">
+        <div><div class="pt" id="dht">Welcome</div><div class="ps">Leave Management Portal</div></div>
+        <button class="btn btn-p" onclick="gp('apply',document.getElementById('ni-apply'))"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Apply Leave</button>
+      </div>
+      <div class="mrow" id="dm"></div>
+      <div class="dash-grid" style="display:grid;grid-template-columns:1.4fr 1fr;gap:1.25rem;">
+        <div class="card"><div class="ch"><span class="ct">Recent leave requests</span></div>
+          <div class="tw"><table><thead><tr><th>Employee</th><th>Leave Type</th><th>From</th><th>Days</th><th>Status</th></tr></thead><tbody id="drl-body"></tbody></table></div>
+        </div>
+        <div class="card"><div class="ch"><span class="ct" id="today-lbl">On leave today</span></div><div style="padding:1rem;" id="dtt"></div></div>
+      </div>
+    </div>
+
+    <!-- APPLY -->
+    <div class="page" id="page-apply">
+      <div class="ph"><div><div class="pt">Apply for Leave</div><div class="ps">Submit a leave request</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+        <div class="card"><div class="ch"><span class="ct">New leave request</span></div>
+          <div style="padding:1.25rem;">
+            <div class="frow s1" id="apply-emp-row"><div class="fg2"><label>Employee</label><select id="aem" onchange="updBal()"></select></div></div>
+            <div class="frow s1"><div class="fg2"><label>Leave category</label><select id="acat" onchange="filtLT()"></select></div></div>
+            <div class="frow s1"><div class="fg2"><label>Leave type</label><select id="atyp"></select></div></div>
+            <div class="frow">
+              <div class="fg2"><label>From date</label><input type="date" id="afr"></div>
+              <div class="fg2"><label>To date</label><input type="date" id="ato"></div>
+            </div>
+            <div class="frow s1"><div class="fg2"><label>Reason (optional)</label><textarea id="ars" placeholder="Describe the reason..."></textarea></div></div>
+            <div class="info-box" id="abal">Select employee to see balance.</div>
+            <div style="display:flex;gap:8px;"><button class="btn btn-p" onclick="subLeave()">Submit request</button><button class="btn btn-o" onclick="clrApply()">Clear</button></div>
+          </div>
+        </div>
+        <div class="card"><div class="ch"><span class="ct">Leave summary</span></div><div style="padding:1rem;" id="apsum"></div></div>
+      </div>
+    </div>
+
+    <!-- BALANCE -->
+    <div class="page" id="page-balance">
+      <div class="ph">
+        <div><div class="pt">Leave Balance</div><div class="ps">Real-time leave balance</div></div>
+        <select id="balemp" onchange="renBal()" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;background:#fff;"></select>
+      </div>
+      <div id="bal-hdr" style="margin-bottom:1rem;"></div>
+      <div class="balg" id="balg"></div>
+    </div>
+
+    <!-- CALENDAR -->
+    <div class="page" id="page-calendar">
+      <div class="ph"><div><div class="pt" id="cal-page-title">My Leave Calendar</div><div class="ps">Approved leave calendar</div></div></div>
+      <div class="card">
+        <div class="ch">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <button class="bico" onclick="prevM()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
+            <button class="bico" onclick="nextM()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>
+            <span style="font-size:15px;font-weight:600;" id="cml">January 2026</span>
+          </div>
+          <select id="cef" onchange="renCal()" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--rad);font-size:12.5px;background:#fff;display:none;"><option value="">All employees</option></select>
+        </div>
+        <div style="padding:1rem;">
+          <div class="cg" id="cdl"></div>
+          <div class="cg" id="cgrid" style="gap:4px;margin-top:4px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHANGE PASSWORD -->
+    <!-- TIMELINE PAGE -->
+    <div class="page" id="page-timeline">
+      <div class="ph">
+        <div><div class="pt">Leave Timeline</div><div class="ps">Complete leave history — all applied, approved, rejected and cancelled</div></div>
+        <select id="tl-emp" onchange="renTimeline()" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;background:#fff;display:none;"></select>
+      </div>
+      <div id="timeline-container"></div>
+    </div>
+
+    <div class="page" id="page-pwreset">
+      <div class="ph"><div><div class="pt">Change Password</div><div class="ps">Update your login password</div></div></div>
+      <div class="card" style="max-width:440px;"><div class="ch"><span class="ct">Reset your password</span></div>
+        <div style="padding:1.25rem;">
+          <div class="warn-box">Minimum 6 characters. You need your current password to change it.</div>
+          <div class="frow s1"><div class="fg2"><label>Current password</label><input type="password" id="pw-cur" placeholder="Your current password"></div></div>
+          <div class="frow s1"><div class="fg2"><label>New password</label><input type="password" id="pw-new" placeholder="Min 6 characters"></div></div>
+          <div class="frow s1"><div class="fg2"><label>Confirm new password</label><input type="password" id="pw-con" placeholder="Repeat new password"></div></div>
+          <button class="btn btn-p" onclick="doResetPw()" style="margin-top:.5rem;">Update password</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPROVALS -->
+    <!-- CHARTS PAGE -->
+    <div class="page" id="page-charts">
+      <div class="ph"><div><div class="pt">Charts &amp; Analytics</div><div class="ps">Visual overview of team leave data</div></div>
+        <select id="chart-year" onchange="renCharts()" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;background:#fff;font-weight:600;">
+          <option value="2025">2025</option><option value="2026" selected>2026</option><option value="2027">2027</option><option value="2028">2028</option>
+        </select>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+        <div class="card"><div class="ch"><span class="ct">Monthly Leave Trend</span></div><div style="padding:1rem;"><canvas id="chart-monthly" height="220"></canvas></div></div>
+        <div class="card"><div class="ch"><span class="ct">Leave Type Distribution</span></div><div style="padding:1rem;"><canvas id="chart-types" height="220"></canvas></div></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+        <div class="card"><div class="ch"><span class="ct">Vendor-wise Leave Count</span></div><div style="padding:1rem;"><canvas id="chart-vendor" height="220"></canvas></div></div>
+        <div class="card"><div class="ch"><span class="ct">Team Leave Balance Overview</span></div><div style="padding:1rem;"><div style="overflow-y:auto;"><canvas id="chart-balance" style="height:680px;"></canvas></div></div></div>
+      </div>
+    </div>
+
+    <div class="page" id="page-approvals">
+      <div class="ph">
+        <div><div class="pt">Leave Approvals</div><div class="ps">All approvals are saved permanently</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="sbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="aps" placeholder="Search employee..." oninput="renApp()"></div>
+          <select id="apf" onchange="renApp()" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;background:#fff;">
+            <option value="">All status</option><option value="Pending">Pending</option><option value="Approved">Approved</option><option value="Rejected">Rejected</option><option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+      </div>
+      <div class="card"><div class="ch"><span class="ct">All leave requests</span><span id="apc" class="badge bg-p"></span></div>
+        <div class="tw"><table><thead><tr><th>Employee</th><th>Vendor</th><th>Role</th><th>Leave Type</th><th>From</th><th>To</th><th>Days</th><th>Status</th><th>Cancel Req</th><th>Action</th></tr></thead><tbody id="apb"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- EMPLOYEES -->
+    <div class="page" id="page-employees">
+      <div class="ph">
+        <div><div class="pt">Employee Management</div><div class="ps">All changes are saved permanently</div></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-o" onclick="openCF()" style="border-color:var(--p600);color:var(--p600);"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>New Year Carry Forward</button>
+          <button class="btn btn-p" onclick="openEM()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Add employee</button>
+        </div>
+      </div>
+      <div class="warn-box">Employee records are never deleted. Deactivating an employee preserves all their leave history.</div>
+      <div class="info-box" id="correction-box" style="display:none;">
+        <strong>⚠️ Data Correction Required:</strong> Some leaves were incorrectly deducted from balance under non-deductible categories.
+        <button onclick="runDataCorrection()" class="btn btn-p" style="margin-left:10px;padding:5px 12px;font-size:12px;">Fix Now — Restore Balances</button>
+      </div>
+      <div class="mrow" id="emm"></div>
+      <div class="card">
+        <div class="ch"><span class="ct">Team roster</span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <div class="sbox"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input type="text" id="es" placeholder="Search name, ID..." oninput="renEmp()"></div>
+            <select id="erf" onchange="renEmp()" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;background:#fff;"><option value="">All roles</option></select>
+            <select id="evf" onchange="renEmp()" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;background:#fff;"><option value="">All vendors</option></select>
+          </div>
+        </div>
+        <div class="tw"><table><thead><tr><th>Name</th><th>EMP ID</th><th>Vendor</th><th>Role</th><th>DOJ</th><th>CF</th><th>Intake</th><th>Balance</th><th>Actions</th></tr></thead><tbody id="eb"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- REPORT -->
+    <div class="page" id="page-report">
+      <div class="ph">
+        <div><div class="pt">Leave Reports</div><div class="ps">Month-wise leave summary</div></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <select id="rep-year" onchange="changeRepYear()" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;background:#fff;font-weight:600;">
+            <option value="2025">2025</option>
+            <option value="2026" selected>2026</option>
+            <option value="2027">2027</option>
+            <option value="2028">2028</option>
+          </select>
+          <select id="rep-emp" onchange="renRep()" style="padding:8px 12px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;background:#fff;"><option value="">All employees</option></select>
+          <button class="btn btn-o" onclick="expCSV()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Month CSV</button>
+          <button class="btn btn-p" onclick="expFullYearCSV()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Full Year (All 12 Months)</button>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:1rem;">
+        <div class="ch">
+          <span class="ct">Select view</span>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-o" id="btn-monthly" onclick="switchRepView('monthly')" style="background:var(--p600);color:#fff;">Monthly Detail</button>
+            <button class="btn btn-o" id="btn-summary" onclick="switchRepView('summary')">Employee Summary</button>
+          </div>
+        </div>
+        <div id="monthly-view">
+          <div style="padding:1rem;display:flex;flex-wrap:wrap;gap:6px;" id="mcs"></div>
+        </div>
+        <div id="summary-view" style="display:none;padding:1rem;">
+          <p style="font-size:13px;color:var(--ts);">Shows total leaves taken and balance remaining for all employees for the selected year.</p>
+        </div>
+      </div>
+      <!-- Monthly detail table -->
+      <div class="card" id="monthly-detail-card"><div class="ch"><span class="ct" id="rt">Leave summary</span><span id="rc" class="badge bg-p"></span></div>
+        <div class="tw"><table><thead><tr><th>Employee</th><th>EMP ID</th><th>Vendor</th><th>Role</th><th>Leave Type</th><th>Dates</th><th>Days</th><th>Status</th></tr></thead><tbody id="rb"></tbody></table></div>
+      </div>
+
+      <!-- Employee summary table -->
+      <div class="card" id="summary-detail-card" style="display:none;">
+        <div class="ch">
+          <span class="ct">Employee Leave Summary — <span id="sum-year-lbl">2026</span></span>
+          <span id="sum-rc" class="badge bg-p"></span>
+          <button class="btn btn-o" onclick="expSummaryCSV()" style="margin-left:auto;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Export Summary CSV</button>
+        </div>
+        <div class="tw">
+          <table>
+            <thead>
+              <tr>
+                <th>Employee</th>
+                <th>EMP ID</th>
+                <th>Vendor</th>
+                <th>Role</th>
+                <th>CF</th>
+                <th>Accrued</th>
+                <th>Total Entitled</th>
+                <th>PL/Sick Used</th>
+                <th>Available Balance</th>
+                <th>Comp-Off</th>
+                <th>Overtime</th>
+                <th>Other Time Off</th>
+                <th>Vol. Hours</th>
+                <th>Leave of Absence</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="sum-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="mw" id="mem">
+  <div class="modal">
+    <div class="mtitle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--p600)" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span id="emtit">Add new employee</span></div>
+    <div class="frow"><div class="fg2"><label>Full name</label><input type="text" id="ef-name" placeholder="Full name"></div><div class="fg2"><label>EMP ID</label><input type="text" id="ef-id" placeholder="e.g. EMP034"></div></div>
+    <div class="frow s1"><div class="fg2"><label>Email address</label><input type="email" id="ef-email" placeholder="email@company.com"></div></div>
+    <div class="frow"><div class="fg2"><label>Vendor</label><select id="ef-vendor"><option>Quess Corp</option><option>CTDI</option><option>Aforeserve</option><option>Eagle</option><option>Inovative</option><option>Other</option></select></div><div class="fg2"><label>Role</label><input type="text" id="ef-role" placeholder="e.g. Data Lake"></div></div>
+    <div class="frow"><div class="fg2"><label>Date of joining</label><input type="date" id="ef-doj"></div><div class="fg2"><label>Initial password</label><input type="text" id="ef-pw" placeholder="Default: Pass@123"></div></div>
+    <div class="frow"><div class="fg2"><label>Carry forward (days)</label><input type="number" id="ef-cf" value="0" min="0" step="0.25"></div><div class="fg2"><label>Annual intake (days)</label><input type="number" id="ef-int" value="21" min="0" step="0.25"></div></div>
+    <div class="ma"><button class="btn btn-o" onclick="cm('mem')">Cancel</button><button class="btn btn-p" onclick="saveEmp()">Save employee</button></div>
+  </div>
+</div>
+<div class="mw" id="mcf">
+  <div class="modal" style="max-width:400px;">
+    <div class="mtitle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--p600)" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/></svg>New Year Carry Forward</div>
+    <div class="info-box" style="margin-bottom:1rem;">This will carry forward each employee's remaining leave balance (max 21 days) to the new year and reset intake to 21 days.</div>
+    <div class="frow s1"><div class="fg2"><label>New Leave Year</label>
+      <select id="cf-year">
+        <option value="2027">2027</option>
+        <option value="2028">2028</option>
+        <option value="2029">2029</option>
+      </select>
+    </div></div>
+    <div class="warn-box">⚠️ This updates ALL employee balances. Cannot be undone. Do this only at year-end.</div>
+    <div class="ma"><button class="btn btn-o" onclick="cm('mcf')">Cancel</button><button class="btn btn-p" onclick="doCarryForward()">Process Carry Forward</button></div>
+  </div>
+</div>
+<div class="mw" id="mconf">
+  <div class="modal" style="max-width:380px;">
+    <div class="mtitle" style="color:var(--r600);"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Confirm deactivation</div>
+    <p style="font-size:13.5px;color:var(--ts);margin-bottom:.5rem;" id="confmsg"></p>
+    <p style="font-size:12px;color:var(--tm);">All leave history is preserved permanently.</p>
+    <div class="ma"><button class="btn btn-o" onclick="cm('mconf')">Cancel</button><button class="btn btn-d" id="confok">Deactivate</button></div>
+  </div>
+</div>
+<div class="mw" id="m-admin-pw">
+  <div class="modal" style="max-width:380px;">
+    <div class="mtitle"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--p600)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>Reset Employee Password</div>
+    <p style="font-size:13px;color:var(--ts);margin-bottom:1rem;" id="admin-pw-name"></p>
+    <div class="frow s1"><div class="fg2"><label>New password (min 6 chars)</label><input type="text" id="admin-pw-val" placeholder="Enter new password"></div></div>
+    <div class="ma"><button class="btn btn-o" onclick="cm('m-admin-pw')">Cancel</button><button class="btn btn-p" onclick="doAdminPwReset()">Reset password</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" id="tico"><polyline points="20 6 9 17 4 12"/></svg><span id="tmsg"></span></div>
+
+<script>
+var LCATS={"Vacation":["Privilege Leave"],"Sick":["Additional Sick Leave","Sick Leave"],"Overtime":["Overtime"],"Comp-Off":["Comp-Off"],"Other Time Off":["Birthday/Wedding Anniversary Leave","Casual Leave","Leave Without Pay","Optional Festival Holiday","Unapproved Absence","Onsite Leave","Paternity Leave","Bereavement Leave","Maternity Leave"],"Volunteer Hours":["Volunteer Hours: Business Hours","Volunteer Hours: Non Business Hours"],"Leave of Absence":["Disability/Sickness Long Term Disability","Disability/Sickness Long Term Sickness","Disability/Sickness Short Term Disability","Disability/Sickness Short Term Sickness","LOA Educational","LOA Furlough","LOA Maternity/Paternity No Payment","LOA Maternity Payment","LOA Parental","LOA Parental No Payment","LOA Parental Payment","LOA Personal Leave No Payment","LOA Personal Leave Payment","LOA Sabbatical No Payment","LOA Family Medical Leave Act","LOA Jury Duty","LOA Long Service Leave Payment","LOA Workers Compensation"]};
+var CCOLOR={"Vacation":"#378ADD","Sick":"#E24B4A","Overtime":"#BA7517","Other Time Off":"#7F77DD","Volunteer Hours":"#639922","Leave of Absence":"#D85A30","Comp-Off":"#0F6E56"};
+var CBADGE={"Vacation":"bg-b","Sick":"bg-r","Overtime":"bg-a","Other Time Off":"bg-p","Volunteer Hours":"bg-g","Leave of Absence":"bg-co","Comp-Off":"bg-t"};
+var AVC=["av0","av1","av2","av3","av4","av5"];
+var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+var VBADGE={"Quess Corp":"vb-q","CTDI":"vb-c","Aforeserve":"vb-a","Eagle":"vb-e","Inovative":"vb-i"};
+var cu=null,calY=2026,calM=0,selRM=0,repYear=2026,eeIdx=null,adminPwTarget=null;
+
+// ── MOBILE SIDEBAR TOGGLE ─────────────────────────────────────────────────
+function toggleSidebar(){
+  var sb=document.querySelector('.sidebar');
+  var ov=document.getElementById('sb-overlay');
+  var hb=document.getElementById('hamburger');
+  var isOpen=sb.classList.contains('open');
+  if(isOpen){ closeSidebar(); }
+  else {
+    sb.classList.add('open');
+    ov.classList.add('show');
+    hb.style.display='none';
+  }
+}
+function closeSidebar(){
+  var sb=document.querySelector('.sidebar');
+  var ov=document.getElementById('sb-overlay');
+  var hb=document.getElementById('hamburger');
+  sb.classList.remove('open');
+  ov.classList.remove('show');
+  document.body.style.overflow='';
+  if(window.innerWidth<=768) hb.style.display='flex';
+}
+// Close sidebar when nav item clicked on mobile
+document.addEventListener('DOMContentLoaded',function(){
+  document.querySelectorAll('.ni').forEach(function(ni){
+    ni.addEventListener('click',function(){
+      if(window.innerWidth<=768) closeSidebar();
+    });
+  });
+});
+// Show hamburger on mobile by default
+window.addEventListener('resize',function(){
+  var hb=document.getElementById('hamburger');
+  if(!hb)return;
+  if(window.innerWidth>768){
+    hb.style.display='none';
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sb-overlay').classList.remove('show');
+  } else {
+    hb.style.display='flex';
+  }
+});
+var allEmps=[],allLeaves=[];
+
+function ini(n){return n.split(" ").map(function(w){return w[0];}).join("").toUpperCase().slice(0,2);}
+function avc(i){return AVC[i%AVC.length];}
+function fd(d){if(!d)return"-";var dt=new Date(d+"T00:00:00");return dt.toLocaleDateString("en-IN",{day:"2-digit",month:"short",year:"numeric"});}
+function tod(){return new Date().toISOString().split("T")[0];}
+function dbet(a,b){return Math.max(1,Math.round((new Date(b)-new Date(a))/86400000)+1);}
+function ge(id){return allEmps.find(function(e){return e.id===id;});}
+// Non-deductible categories — do NOT reduce leave balance
+var NON_DEDUCTIBLE_CATS=["Comp-Off","Overtime","Other Time Off","Volunteer Hours","Leave of Absence"];
+
+function isNonDeductible(l){
+  return l.isCompOff===true || 
+         NON_DEDUCTIBLE_CATS.indexOf(l.cat)>-1 ||
+         l.type==="Comp-Off" || l.type==="Overtime" ||
+         l.type==="Volunteer Hours: Business Hours" ||
+         l.type==="Volunteer Hours: Non Business Hours";
+}
+
+// empUsed — only counts DEDUCTIBLE leaves (PL + Sick)
+function empUsed(id){
+  return allLeaves.filter(function(l){
+    return l.eid===id && l.status==="Approved" && !isNonDeductible(l);
+  }).reduce(function(s,l){return s+l.days;},0);
+}
+
+// PHASE 3: Monthly accrual calculation
+// 1.75 days per month from Jan 2026 or DOJ (whichever is later)
+function calcAccrued(doj, year){
+  var now = new Date();
+  var currentYear = now.getFullYear();
+  var currentMonth = now.getMonth(); // 0-based
+
+  var dojDate = doj ? new Date(doj) : new Date(year+"-01-01");
+  var yearStart = new Date(year+"-01-01");
+  var accrualStart = dojDate > yearStart ? dojDate : yearStart;
+
+  if(accrualStart.getFullYear() > year) return 0;
+
+  var startMonth = accrualStart.getMonth();
+  var startYear = accrualStart.getFullYear();
+  if(startYear < year) startMonth = 0;
+
+  var endMonth = (currentYear === year) ? currentMonth : 11;
+  var monthsAccrued = endMonth - startMonth + 1;
+  if(monthsAccrued <= 0) return 0;
+
+  return Math.min(Math.round(monthsAccrued * 1.75 * 100) / 100, 21);
+}
+
+// Available balance = CF + Accrued - Used (deductible only)
+function empBal(id){
+  var e=ge(id); if(!e) return 0;
+  var accrued=calcAccrued(e.doj, new Date().getFullYear());
+  var used=empUsed(id);
+  return Math.max(0, Math.round((e.cf + accrued - used)*100)/100);
+}
+
+// Total entitled balance (CF + full accrued to date)
+function empAccrued(id){
+  var e=ge(id); if(!e) return 0;
+  return calcAccrued(e.doj, new Date().getFullYear());
+}
+function loader(v){document.getElementById("loader").className="loader"+(v?" show":"");}
+function cm(id){document.getElementById(id).classList.remove("open");}
+function showToast(msg,type){
+  type=type||"info";
+  var t=document.getElementById("toast");
+  t.className="toast show t"+type[0];
+  document.getElementById("tmsg").textContent=msg;
+  var ic=document.getElementById("tico");
+  ic.innerHTML=type==="success"?"<polyline points=\"20 6 9 17 4 12\"/>":type==="danger"?"<line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"/><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"/>":"<circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"/>";
+  setTimeout(function(){t.classList.remove("show");},3500);
+}
+
+async function api(method,url,body){
+  loader(true);
+  try{
+    var opts={method:method,headers:{"Content-Type":"application/json"},credentials:"include"};
+    if(body)opts.body=JSON.stringify(body);
+    var r=await fetch(url,opts);
+    var data=await r.json();
+    if(!r.ok)throw new Error(data.error||"Request failed");
+    return data;
+  }catch(e){showToast(e.message,"danger");throw e;}
+  finally{loader(false);}
+}
+
+async function doLogin(){
+  var u=document.getElementById("inp-user").value.trim();
+  var p=document.getElementById("inp-pass").value.trim();
+  var r=document.getElementById("inp-role").value;
+  var err=document.getElementById("lerr");
+  err.style.display="none";
+  if(!u||!p){err.textContent="Please enter username and password.";err.style.display="block";return;}
+  try{
+    var res=await api("POST","/api/login",{username:u,password:p,role:r});
+    cu=res.user;
+    await loadAll();
+    showApp();
+  }catch(e){err.textContent=e.message;err.style.display="block";}
+}
+
+async function doLogout(){
+  clearAllTimers();
+  try{await api("POST","/api/logout");}catch(e){}
+  cu=null;allEmps=[];allLeaves=[];
+  isBlurred=false;
+  document.getElementById("security-blur").classList.remove("show");
+  document.getElementById("timeout-banner").classList.remove("show");
+  document.getElementById("app").style.display="none";
+  document.getElementById("login-page").style.display="flex";
+  document.getElementById("inp-pass").value="";
+}
+
+async function loadAll(){
+  var er=await api("GET","/api/employees");
+  allEmps=er.filter(function(e){return !e.inactive;});
+  allLeaves=await api("GET","/api/leaves");
+}
+
+function showApp(){
+  document.getElementById("login-page").style.display="none";
+  document.getElementById("app").style.display="block";
+  document.getElementById("sb-un").textContent=cu.name.split(" ")[0];
+  document.getElementById("sb-av").textContent=ini(cu.name);
+  document.getElementById("sb-rl").textContent=cu.role==="admin"?"Admin":"Employee";
+  document.getElementById("dht").textContent="Welcome, "+cu.name.split(" ")[0];
+  var isAdmin=cu.role==="admin";
+  ["mns","ni-approvals","ni-employees","ni-report","ni-charts"].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=isAdmin?"":"none";});
+  document.getElementById("cal-nav-lbl").textContent=isAdmin?"Team Calendar":"My Calendar";
+  document.getElementById("cal-page-title").textContent=isAdmin?"Team Leave Calendar":"My Leave Calendar";
+  document.getElementById("cef").style.display=isAdmin?"":"none";
+  popApplyEmp();renDash();renBal();renCal();initMC();popRepEmp();
+  if(isAdmin){renEmp();renEmpM();renApp();}
+  // Start security timers
+  initTopbar();
+  startSecurityTimers();
+  initActivityTracking();
+}
+
+function gp(page,el){
+  document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+  document.querySelectorAll(".ni").forEach(function(n){n.classList.remove("active");});
+  document.getElementById("page-"+page).classList.add("active");
+  if(el)el.classList.add("active");
+  if(page==="balance")renBal();
+  if(page==="calendar")renCal();
+  if(page==="report")renRep();
+  if(page==="employees"){renEmp();renEmpM();}
+  if(page==="approvals")renApp();
+  if(page==="apply")renApSum();
+  if(page==="timeline")renTimeline();
+  if(page==="charts")renCharts();
+}
+
+function mc(bg,color,svg,val,lab){return "<div class=\"mc\"><div class=\"mc-icon\" style=\"background:"+bg+"\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\""+color+"\" stroke-width=\"2\" width=\"19\" height=\"19\">"+svg+"</svg></div><div class=\"mc-val\">"+val+"</div><div class=\"mc-lab\">"+lab+"</div></div>";}
+
+function renDash(){
+  var pend=allLeaves.filter(function(l){return l.status==="Pending";}).length;
+  var t=tod();
+  var onL=allLeaves.filter(function(l){return l.from<=t&&l.to>=t&&l.status==="Approved";});
+  var m=document.getElementById("dm");
+  if(cu.role==="admin"){
+    m.innerHTML=
+      mc("var(--p50)","var(--p600)","<path d=\"M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/>",allEmps.length,"Total employees")+
+      mc("var(--a50)","var(--a600)","<circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/>",pend,"Pending approvals")+
+      mc("var(--g50)","var(--g600)","<polyline points=\"9 11 12 14 22 4\"/>",allLeaves.filter(function(l){return l.status==="Approved";}).length,"Approved leaves")+
+      mc("var(--t50)","var(--t600)","<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/>",onL.length,"On leave today");
+  }else{
+    var e=ge(cu.id);var used=empUsed(cu.id);var b=empBal(cu.id);
+    m.innerHTML=
+      mc("var(--p50)","var(--p600)","<circle cx=\"12\" cy=\"12\" r=\"10\"/>",(e?e.bal:0),"Total balance")+
+      mc("var(--b50)","var(--b600)","<path d=\"M12 2v20\"/>",(e?e.cf:0),"Carry forward")+
+      mc("var(--r50)","var(--r600)","<circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/>",used,"Days used")+
+      mc("var(--g50)","var(--g600)","<polyline points=\"20 6 9 17 4 12\"/>",b,"Balance left");
+  }
+  // Sort all leaves by applied date latest first, then take top 8
+  var rl=cu.role==="admin"
+    ? allLeaves.slice().sort(function(a,b){
+        var da=a.applied||""; var db=b.applied||"";
+        if(db!==da) return db.localeCompare(da);
+        // If same date, sort by id (LV+timestamp) descending
+        return (b.id||"").localeCompare(a.id||"");
+      }).slice(0,8)
+    : allLeaves.filter(function(l){return l.eid===cu.id;})
+        .slice().sort(function(a,b){
+          var da=a.applied||""; var db=b.applied||"";
+          if(db!==da) return db.localeCompare(da);
+          return (b.id||"").localeCompare(a.id||"");
+        }).slice(0,8);
+  document.getElementById("drl-body").innerHTML=rl.length?rl.map(function(l){var emp=ge(l.eid);var ri=allEmps.findIndex(function(e){return e.id===l.eid;});return "<tr><td><div style=\"display:flex;align-items:center;gap:7px;\"><div class=\"av "+avc(ri)+"\" style=\"width:26px;height:26px;font-size:10px;\">"+(emp?ini(emp.name):"?")+"</div><span>"+(emp?emp.name.split(" ")[0]+" "+emp.name.split(" ").slice(-1)[0]:"--")+"</span></div></td><td><span class=\"badge "+(CBADGE[l.cat]||"bg-gr")+"\" style=\"font-size:10.5px;\">"+l.type.split(/[>/]/).pop().trim()+"</span></td><td style=\"font-size:12px;\">"+fd(l.from)+"</td><td style=\"font-weight:600;\">"+l.days+"</td><td><span class=\"badge "+(l.status==="Approved"?"bg-g":l.status==="Rejected"||l.status==="Cancelled"?"bg-r":"bg-a")+"\">"+l.status+"</span></td></tr>";}).join(""):"<tr><td colspan=\"5\" style=\"text-align:center;padding:1.5rem;color:var(--tm);\">No leave requests yet.</td></tr>";
+  document.getElementById("today-lbl").textContent=cu.role==="admin"?"On leave today":"My status today";
+  var myOnL=cu.role==="admin"?onL:onL.filter(function(l){return l.eid===cu.id;});
+  document.getElementById("dtt").innerHTML=myOnL.length?myOnL.map(function(l){var emp=ge(l.eid);var i=allEmps.findIndex(function(e){return e.id===l.eid;});return emp?"<div style=\"display:flex;align-items:center;gap:8px;margin-bottom:10px;\"><div class=\"av "+avc(i)+"\">"+ini(emp.name)+"</div><div><div style=\"font-size:13px;font-weight:500;\">"+emp.name.split(" ")[0]+"</div><div style=\"font-size:11px;color:var(--tm);\">"+l.type.split(/[>/]/).pop().trim()+"</div></div></div>":"";}).join(""):"<p style=\"color:var(--tm);font-size:13px;\">No one on leave today.</p>";
+  var ab=document.getElementById("abadge");
+  if(pend>0&&cu.role==="admin"){ab.textContent=pend;ab.style.display="inline";}else ab.style.display="none";
+}
+
+function popApplyEmp(){
+  var sel=document.getElementById("aem");sel.innerHTML="";
+  var list=cu.role==="admin"?allEmps:[ge(cu.id)].filter(Boolean);
+  list.forEach(function(e){var o=document.createElement("option");o.value=e.id;o.textContent=e.name+" ("+e.id+")";sel.appendChild(o);});
+  document.getElementById("apply-emp-row").style.display=cu.role==="admin"?"":"none";
+  document.getElementById("acat").innerHTML=Object.keys(LCATS).map(function(c){return "<option value=\""+c+"\">"+c+"</option>";}).join("");
+  filtLT();
+}
+function filtLT(){document.getElementById("atyp").innerHTML=(LCATS[document.getElementById("acat").value]||[]).map(function(t){return "<option value=\""+t+"\">"+t+"</option>";}).join("");updBal();}
+function updBal(){
+  var id=cu.role==="admin"?document.getElementById("aem").value:cu.id;
+  var e=ge(id);if(!e)return;
+  var accrued=empAccrued(id);
+  var b=empBal(id);
+  var used=empUsed(id);
+  var total=Math.round((e.cf+accrued)*100)/100;
+  document.getElementById("abal").innerHTML=
+    "<strong>"+e.name+"</strong><br>"+
+    "<span style=\"font-size:12px;color:var(--ts);\">"+
+    "CF: <strong>"+e.cf+"</strong> &nbsp;+&nbsp; "+
+    "Accrued: <strong>"+accrued+"</strong> &nbsp;=&nbsp; "+
+    "Total entitled: <strong>"+total+"</strong> &nbsp;|&nbsp; "+
+    "PL/Sick used: <strong style=\"color:var(--r600)\">"+used+"</strong> &nbsp;|&nbsp; "+
+    "<strong style=\"color:"+(b<3?"var(--r600)":b<8?"var(--a600)":"var(--g600)")+"\">Available: "+b+" days</strong>"+
+    "</span>";
+  renApSum();
+}
+function renApSum(){
+  var id=cu.role==="admin"?document.getElementById("aem").value:cu.id;
+  var e=ge(id);if(!e){document.getElementById("apsum").innerHTML="";return;}
+  var myL=allLeaves.filter(function(l){return l.eid===id;}).slice().reverse();
+  var b=empBal(id);
+  document.getElementById("apsum").innerHTML="<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;\"><div style=\"background:var(--g50);border-radius:8px;padding:10px;text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--g800);\">"+b+"</div><div style=\"font-size:11px;color:var(--g600);\">Days remaining</div></div><div style=\"background:var(--p50);border-radius:8px;padding:10px;text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--p800);\">"+e.bal+"</div><div style=\"font-size:11px;color:var(--p600);\">Total balance</div></div></div><div style=\"font-size:12px;font-weight:600;color:var(--ts);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em;\">Recent requests</div>"+(myL.length?myL.map(function(l){return "<div style=\"display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);\"><div><div style=\"font-size:12.5px;font-weight:500;\">"+l.type.split(/[>/]/).pop().trim()+"</div><div style=\"font-size:11px;color:var(--tm);\">"+fd(l.from)+" to "+fd(l.to)+"</div></div><div style=\"display:flex;align-items:center;gap:5px;\"><span class=\"badge "+(l.status==="Approved"?"bg-g":l.status==="Cancelled"?"bg-gr":l.status==="Rejected"?"bg-r":l.cancelRequested?"bg-a":"bg-a")+"\" style=\"font-size:10.5px;\">"+(l.cancelRequested?"Cancel Req...":l.status)+"</span>"+(!l.cancelRequested&&(l.status==="Pending"||(l.status==="Approved"&&l.to>=tod()))?"<button onclick=\"reqCancel('"+l.id+"')\" style=\"font-size:10px;padding:2px 7px;border:1px solid var(--border);border-radius:5px;background:#fff;cursor:pointer;color:var(--r600);\" title=\"Request cancellation\">Cancel?</button>":"")+"</div></div>";}).join(""):"<p style=\"font-size:13px;color:var(--tm);\">No requests yet.</p>");
+}
+async function subLeave(){
+  var btn=document.querySelector('button[onclick="subLeave()"]');
+  if(btn){btn.disabled=true;btn.textContent='Submitting...';}
+  try{ await _subLeave(); } finally {
+    if(btn){btn.disabled=false;btn.textContent='Submit request';}
+  }
+}
+async function _subLeave(){
+  var id=cu.role==="admin"?document.getElementById("aem").value:cu.id;
+  var cat=document.getElementById("acat").value;var type=document.getElementById("atyp").value;
+  var fr=document.getElementById("afr").value;var to=document.getElementById("ato").value;var rs=document.getElementById("ars").value;
+  if(!fr||!to){showToast("Please select from and to dates.","danger");return;}
+  if(fr>to){showToast("From date cannot be after to date.","danger");return;}
+  // DUPLICATE CHECK: frontend validation before hitting server
+  if(type!=="Comp-Off"){
+    var dupCheck=allLeaves.filter(function(l){
+      return l.eid===id&&l.type!=="Comp-Off"&&
+             ["Pending","Approved"].indexOf(l.status)>-1&&
+             l.from<=to&&l.to>=fr;
+    });
+    if(dupCheck.length>0){
+      showToast("Leave already exists for this period: "+dupCheck[0].type+" ("+dupCheck[0].status+")","danger");
+      return;
+    }
+  }
+  var days=dbet(fr,to);var b=empBal(id);
+  if(days>b&&cat!=="Overtime"&&type!=="Leave Without Pay"){showToast("Insufficient balance. Only "+b+" days remaining.","danger");return;}
+  try{
+    await api("POST","/api/leaves",{eid:id,cat:cat,type:type,from:fr,to:to,days:days,reason:rs});
+    showToast("Leave submitted and saved successfully.","success");
+    clrApply();allLeaves=await api("GET","/api/leaves");
+    renDash();if(cu.role==="admin")renApp();renApSum();
+  }catch(e){}
+}
+
+function clrApply(){document.getElementById("afr").value="";document.getElementById("ato").value="";document.getElementById("ars").value="";}
+
+function renBal(){
+  var sel=document.getElementById("balemp");var cur=sel.value;sel.innerHTML="";
+  var list=cu&&cu.role==="admin"?allEmps:[ge(cu?cu.id:"")].filter(Boolean);
+  list.forEach(function(e){var o=document.createElement("option");o.value=e.id;o.textContent=e.name+" ("+e.id+")";sel.appendChild(o);});
+  if(cu&&cu.role==="employee"){sel.value=cu.id;sel.style.display="none";}else{sel.style.display="";if(cur)sel.value=cur;}
+  var id=sel.value;var e=ge(id);if(!e)return;
+  var used=empUsed(id);var bal=empBal(id);var ri=allEmps.indexOf(e);
+  document.getElementById("bal-hdr").innerHTML=(function(){
+    var accrued=calcAccrued(e.doj,new Date().getFullYear());
+    var totalEntitled=Math.round((e.cf+accrued)*100)/100;
+    return "<div style=\"background:var(--surface);border-radius:var(--radlg);border:1px solid var(--border);padding:1.25rem;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;gap:1rem;align-items:center;\">"+
+    "<div><div style=\"display:flex;align-items:center;gap:10px;\"><div class=\"av "+avc(ri)+"\" style=\"width:40px;height:40px;font-size:14px;\">"+ini(e.name)+"</div>"+
+    "<div><div style=\"font-size:15px;font-weight:700;\">"+e.name+"</div><div style=\"font-size:12px;color:var(--tm);\">"+e.id+" &bull; "+e.vendor+" &bull; "+e.role+"</div></div></div></div>"+
+    "<div style=\"text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--b600);\">"+e.cf+"</div><div style=\"font-size:11px;color:var(--tm);\">Carry Forward</div></div>"+
+    "<div style=\"text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--p600);\">"+accrued+"</div><div style=\"font-size:11px;color:var(--tm);\">Accrued (1.75/mo)</div></div>"+
+    "<div style=\"text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:#185FA5;\">"+totalEntitled+"</div><div style=\"font-size:11px;color:var(--tm);\">Total Entitled</div></div>"+
+    "<div style=\"text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--r600);\">"+used+"</div><div style=\"font-size:11px;color:var(--tm);\">PL/Sick Used</div></div>"+
+    "<div style=\"text-align:center;\"><div style=\"font-size:22px;font-weight:800;color:"+(bal<3?"var(--r600)":bal<8?"var(--a600)":"var(--g600)")+";\">"+ bal+"</div><div style=\"font-size:11px;color:var(--tm);\">Available Balance</div></div>"+
+    "</div>";
+  })()\">"+ bal+"</div><div style=\"font-size:11px;color:var(--tm);\">Balance Left</div></div></div>";
+  var html="";
+  Object.keys(LCATS).forEach(function(cat){var color=CCOLOR[cat]||"#888";html+="<div class=\"balc\"><div class=\"balcat\">"+cat+"</div>";LCATS[cat].forEach(function(type){var tU=allLeaves.filter(function(l){return l.eid===id&&l.type===type&&l.status==="Approved";}).reduce(function(s,l){return s+l.days;},0);var pct=Math.min(100,Math.round((tU/Math.max(e.bal,1))*100));html+="<div style=\"margin-bottom:8px;\"><div class=\"balname\">"+type.split(/[>/]/).pop().trim()+"</div><div class=\"balbg\"><div class=\"balbar\" style=\"width:"+pct+"%;background:"+color+";\"></div></div><div class=\"balnums\"><span style=\"font-weight:600;\">"+tU+" used</span><span>of "+e.bal+"</span></div></div>";});html+="</div>";});
+  document.getElementById("balg").innerHTML=html;
+}
+
+function renCal(){
+  document.getElementById("cml").textContent=MONTHS[calM]+" "+calY;
+  var cef=document.getElementById("cef");
+  if(cu&&cu.role==="admin"){if(cef.options.length===1)allEmps.forEach(function(e){var o=document.createElement("option");o.value=e.id;o.textContent=e.name;cef.appendChild(o);});cef.style.display="";}else cef.style.display="none";
+  var fe=cu&&cu.role==="employee"?cu.id:cef.value;
+  document.getElementById("cdl").innerHTML=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(function(d){return "<div class=\"dl\">"+d+"</div>";}).join("");
+  var first=new Date(calY,calM,1).getDay();var dim=new Date(calY,calM+1,0).getDate();var t=tod();var html="";
+  for(var i=0;i<first;i++)html+="<div class=\"dc om\"></div>";
+  for(var d=1;d<=dim;d++){var ds=calY+"-"+String(calM+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");var dl=allLeaves.filter(function(l){return (fe?l.eid===fe:true)&&l.from<=ds&&l.to>=ds&&l.status==="Approved";});html+="<div class=\"dc "+(dl.length?"hl ":"")+(ds===t?"tod":"")+"\"><div class=\"dn\">"+d+"</div>";dl.slice(0,2).forEach(function(l){var e=ge(l.eid);html+="<span class=\"lpip\">"+(e?e.name.split(" ")[0]:l.eid)+"</span>";});if(dl.length>2)html+="<span style=\"font-size:9px;color:var(--tm);\">+"+(dl.length-2)+"</span>";html+="</div>";}
+  document.getElementById("cgrid").innerHTML=html;
+}
+function prevM(){calM--;if(calM<0){calM=11;calY--;}renCal();}
+function nextM(){calM++;if(calM>11){calM=0;calY++;}renCal();}
+
+async function doResetPw(){
+  var cur=document.getElementById("pw-cur").value;var nw=document.getElementById("pw-new").value;var con=document.getElementById("pw-con").value;
+  if(!cur||!nw||!con){showToast("All fields are required.","danger");return;}
+  if(nw!==con){showToast("New passwords do not match.","danger");return;}
+  if(nw.length<6){showToast("Password must be at least 6 characters.","danger");return;}
+  try{await api("POST","/api/reset-password",{currentPassword:cur,newPassword:nw});showToast("Password changed and updated successfully!","success");["pw-cur","pw-new","pw-con"].forEach(function(id){document.getElementById(id).value="";});}catch(e){}
+}
+
+function renApp(){
+  var q=(document.getElementById("aps").value||"").toLowerCase();var sf=document.getElementById("apf").value;
+  var data=allLeaves.filter(function(l){var e=ge(l.eid);return (e?e.name.toLowerCase().includes(q)||l.eid.toLowerCase().includes(q):true)&&(sf?l.status===sf:true);}).sort(function(a,b){return b.applied.localeCompare(a.applied);});
+  document.getElementById("apc").textContent=data.length+" requests";
+  document.getElementById("apb").innerHTML=data.length?data.map(function(l){var e=ge(l.eid);var ri=allEmps.findIndex(function(x){return x.id===l.eid;});return "<tr><td><div style=\"display:flex;align-items:center;gap:7px;\"><div class=\"av "+avc(ri)+"\" style=\"width:27px;height:27px;font-size:10px;\">"+(e?ini(e.name):"?")+"</div><div><div style=\"font-size:13px;font-weight:500;\">"+(e?e.name:"Unknown")+"</div><div style=\"font-size:10.5px;color:var(--tm);\">"+l.eid+"</div></div></div></td><td><span class=\"badge "+(e?VBADGE[e.vendor]||"bg-gr":"bg-gr")+"\" style=\"font-size:10.5px;\">"+(e?e.vendor:"--")+"</span></td><td style=\"font-size:12px;color:var(--ts);\">"+(e?e.role:"--")+"</td><td><span class=\"badge "+(CBADGE[l.cat]||"bg-gr")+"\" style=\"font-size:10.5px;\">"+l.type.split(/[>/]/).pop().trim()+"</span></td><td style=\"font-size:12px;\">"+fd(l.from)+"</td><td style=\"font-size:12px;\">"+fd(l.to)+"</td><td style=\"font-weight:600;\">"+l.days+"</td><td><span class=\"badge "+(l.status==="Approved"?"bg-g":l.status==="Rejected"||l.status==="Cancelled"?"bg-r":"bg-a")+"\">"+l.status+"</span></td><td>"+(l.cancelRequested?"<span class=\"badge bg-a\">Requested</span>":l.cancelRejected?"<span class=\"badge bg-r\">Rejected</span>":"&mdash;")+"</td>"+
+      "<td>"+(l.status==="Pending"||l.status==="Approved"?"<div style=\"display:flex;gap:4px;\">"+(l.status==="Pending"?"<button class=\"bico app\" onclick=\"actLeave('"+l.id+"','Approved')\" title=\"Approve\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\"><polyline points=\"20 6 9 17 4 12\"/></svg></button><button class=\"bico del\" onclick=\"actLeave('"+l.id+"','Rejected')\" title=\"Reject\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\"><line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"/><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"/></svg></button>":"")+(l.cancelRequested?"<button class=\"bico app\" onclick=\"processCancel('"+l.id+"','approve')\" title=\"Approve Cancellation\" style=\"border-color:#854F0B;color:#854F0B;\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6\"/></svg></button><button class=\"bico del\" onclick=\"processCancel('"+l.id+"','reject')\" title=\"Reject Cancellation\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.5\"><line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"/><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"/></svg></button>":"<button class=\"bico del\" onclick=\"processCancel('"+l.id+"','direct')\" title=\"Cancel this leave\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6\"/></svg></button>")+"</div>":"&mdash;")+"</td></tr>";}).join(""):"<tr><td colspan=\"9\" style=\"text-align:center;padding:2rem;color:var(--tm);\">No leave requests found.</td></tr>";
+  var ab=document.getElementById("abadge");var pc=allLeaves.filter(function(l){return l.status==="Pending";}).length;
+  if(pc>0&&cu&&cu.role==="admin"){ab.textContent=pc;ab.style.display="inline";}else ab.style.display="none";
+}
+async function actLeave(id,status){
+  try{
+    await api("PUT","/api/leaves/"+id,{status:status});
+    showToast("Leave "+status.toLowerCase()+" saved successfully.",status==="Approved"?"success":"danger");
+    allLeaves=await api("GET","/api/leaves");
+    renApp();renDash();renBal();renRep();
+  }catch(e){}
+}
+
+// CHANGE 3: Cancel request functions
+async function reqCancel(id){
+  // Find the leave to check its status — Rule 2 HR Policy
+  var leave = allLeaves.find(function(l){ return l.id===id; });
+  if(!leave) return;
+
+  if(leave.status==="Pending"){
+    // Pending leave — employee cancels directly, no admin needed
+    if(!confirm("Cancel this pending leave request?")) return;
+    try{
+      await api("POST","/api/leaves/"+id+"/process-cancel",{action:"direct"});
+      showToast("Pending leave cancelled successfully.","success");
+      allLeaves=await api("GET","/api/leaves");
+      renApp();renDash();renApSum();renTimeline();
+    }catch(e){}
+  } else if(leave.status==="Approved" && leave.to>=tod()){
+    // Approved future leave — send request to admin
+    var reason=prompt("Reason for cancellation (optional):");
+    if(reason===null)return;
+    try{
+      await api("POST","/api/leaves/"+id+"/request-cancel",{reason:reason});
+      showToast("Cancellation request sent to admin for approval.","info");
+      allLeaves=await api("GET","/api/leaves");
+      renApp();renDash();renApSum();renTimeline();
+    }catch(e){}
+  } else {
+    showToast("This leave cannot be cancelled.","danger");
+  }
+}
+async function processCancel(id,action){
+  try{
+    await api("POST","/api/leaves/"+id+"/process-cancel",{action:action});
+    var msg=action==="approve"||action==="direct"?"Leave cancelled. Balance credited back.":"Cancellation request rejected.";
+    showToast(msg,action==="reject"?"danger":"success");
+    allLeaves=await api("GET","/api/leaves");
+    renApp();renDash();renBal();renRep();
+  }catch(e){}
+}
+
+function renEmp(){
+  var q=(document.getElementById("es").value||"").toLowerCase();var rf=document.getElementById("erf").value;var vf=document.getElementById("evf").value;
+  var roles=allEmps.map(function(e){return e.role;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort();
+  var vendors=allEmps.map(function(e){return e.vendor;}).filter(function(v,i,a){return a.indexOf(v)===i;}).sort();
+  document.getElementById("erf").innerHTML="<option value=\"\">All roles</option>"+roles.map(function(r){return "<option value=\""+r+"\" "+(r===rf?"selected":"")+">"+r+"</option>";}).join("");
+  document.getElementById("evf").innerHTML="<option value=\"\">All vendors</option>"+vendors.map(function(v){return "<option value=\""+v+"\" "+(v===vf?"selected":"")+">"+v+"</option>";}).join("");
+  var data=allEmps.filter(function(e){return (e.name.toLowerCase().includes(q)||e.id.toLowerCase().includes(q))&&(rf?e.role===rf:true)&&(vf?e.vendor===vf:true);});
+  document.getElementById("eb").innerHTML=data.map(function(e){var ri=allEmps.indexOf(e);var used=empUsed(e.id);var bal=empBal(e.id);return "<tr><td><div style=\"display:flex;align-items:center;gap:8px;\"><div class=\"av "+avc(ri)+"\">"+ini(e.name)+"</div><div><div style=\"font-size:13px;font-weight:500;\">"+e.name+"</div><div style=\"font-size:11px;color:var(--tm);\">"+e.email+"</div></div></div></td><td style=\"font-family:monospace;font-size:12px;color:var(--ts);\">"+e.id+"</td><td><span class=\"badge "+(VBADGE[e.vendor]||"bg-gr")+"\" style=\"font-size:10.5px;\">"+e.vendor+"</span></td><td style=\"font-size:12px;color:var(--ts);\">"+e.role+"</td><td style=\"font-size:12px;color:var(--tm);\">"+fd(e.doj)+"</td><td style=\"font-weight:600;color:var(--b600);text-align:center;\">"+e.cf+"</td><td style=\"font-weight:600;color:var(--p600);text-align:center;\">"+e.intake+"</td><td style=\"text-align:center;\"><span style=\"font-weight:700;color:"+(bal<3?"var(--r600)":bal<8?"var(--a600)":"var(--g600)")+";\">"+ bal+"</span><span style=\"font-size:11px;color:var(--tm);\"> / "+e.bal+"</span></td><td><div style=\"display:flex;gap:4px;\"><button class=\"bico\" onclick=\"editEmp('"+e.id+"')\" title=\"Edit\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7\"/><path d=\"M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z\"/></svg></button><button class=\"bico\" onclick=\"openAdminPwReset('"+e.id+"')\" title=\"Reset password\" style=\"border-color:var(--b600);color:var(--b600);\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\"/><path d=\"M7 11V7a5 5 0 0110 0v4\"/></svg></button><button class=\"bico del\" onclick=\"confRem('"+e.id+"')\" title=\"Deactivate\"><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><line x1=\"23\" y1=\"1\" x2=\"17\" y2=\"7\"/></svg></button></div></td></tr>";}).join("");
+}
+function renEmpM(){
+  checkCorrectionNeeded();
+  var v=allEmps.map(function(e){return e.vendor;}).filter(function(v,i,a){return a.indexOf(v)===i;}).length;
+  document.getElementById("emm").innerHTML=mc("var(--p50)","var(--p600)","<path d=\"M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/>",allEmps.length,"Active employees")+mc("var(--b50)","var(--b600)","<path d=\"M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z\"/>",v,"Vendors")+mc("var(--a50)","var(--a600)","<line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"23\"/>",allEmps.reduce(function(s,e){return s+e.cf;},0).toFixed(2),"Total carry fwd")+mc("var(--g50)","var(--g600)","<polyline points=\"20 6 9 17 4 12\"/>",allEmps.reduce(function(s,e){return s+e.bal;},0).toFixed(2),"Total balance pool");
+}
+// ── DATA CORRECTION: Fix non-deductible category balances ────────────────────
+async function runDataCorrection(){
+  if(!confirm("This will restore leave balances for Pravin Landge (10 days) and Santosh Kumar (3 days) by marking their non-deductible leaves correctly. Proceed?")) return;
+  try{
+    var res = await api("POST","/api/admin/fix-nondeductible",{});
+    showToast(res.message,"success");
+    document.getElementById("correction-box").style.display="none";
+    // Reload data
+    var er=await api("GET","/api/employees");
+    allEmps=er.filter(function(e){return !e.inactive;});
+    allLeaves=await api("GET","/api/leaves");
+    renEmp();renEmpM();renDash();renBal();
+    // Show correction details
+    if(res.details && res.details.length){
+      var detail=res.details.map(function(d){return d.emp+": "+d.days+" days ("+d.type+")";}).join("
+");
+      alert("Corrected "+res.corrected+" records:
+"+detail);
+    }
+  }catch(e){}
+}
+
+// Show correction button for admin on employees page
+function checkCorrectionNeeded(){
+  var box=document.getElementById("correction-box");
+  if(!box||!cu||cu.role!=="admin") return;
+  // Check if any approved non-comp-off non-deductible leaves exist with isCompOff=false
+  var needsCorrection=allLeaves.some(function(l){
+    return l.status==="Approved" && !l.isCompOff &&
+      ["Overtime","Other Time Off","Volunteer Hours","Leave of Absence"].indexOf(l.cat)>-1;
+  });
+  box.style.display=needsCorrection?"":"none";
+}
+
+function openEM(){eeIdx=null;document.getElementById("emtit").textContent="Add new employee";["ef-name","ef-id","ef-email","ef-role","ef-pw"].forEach(function(id){document.getElementById(id).value="";});document.getElementById("ef-id").disabled=false;document.getElementById("ef-doj").value=tod();document.getElementById("ef-cf").value=0;document.getElementById("ef-int").value=21;document.getElementById("mem").classList.add("open");}
+function editEmp(eid){var e=allEmps.find(function(x){return x.id===eid;});if(!e)return;eeIdx=eid;document.getElementById("emtit").textContent="Edit employee";document.getElementById("ef-name").value=e.name;document.getElementById("ef-id").value=e.id;document.getElementById("ef-id").disabled=true;document.getElementById("ef-email").value=e.email;document.getElementById("ef-vendor").value=e.vendor;document.getElementById("ef-role").value=e.role;document.getElementById("ef-doj").value=e.doj||"";document.getElementById("ef-pw").value="";document.getElementById("ef-cf").value=e.cf;document.getElementById("ef-int").value=e.intake;document.getElementById("mem").classList.add("open");}
+async function saveEmp(){
+  var name=document.getElementById("ef-name").value.trim();var id=document.getElementById("ef-id").value.trim();var email=document.getElementById("ef-email").value.trim();
+  var vendor=document.getElementById("ef-vendor").value;var role=document.getElementById("ef-role").value.trim();var doj=document.getElementById("ef-doj").value;
+  var pw=document.getElementById("ef-pw").value.trim();var cf=parseFloat(document.getElementById("ef-cf").value)||0;var intake=parseFloat(document.getElementById("ef-int").value)||21;
+  if(!name||!id||!email){showToast("Name, ID and email are required.","danger");return;}
+  try{
+    if(eeIdx){await api("PUT","/api/employees/"+eeIdx,{name:name,email:email,vendor:vendor,role:role,doj:doj,cf:cf,intake:intake});showToast("Employee updated successfully.","success");}
+    else{await api("POST","/api/employees",{id:id,name:name,email:email,vendor:vendor,role:role,doj:doj,cf:cf,intake:intake,password:pw||"Pass@123"});showToast(name+" added successfully.","success");}
+    cm("mem");var er=await api("GET","/api/employees");allEmps=er.filter(function(e){return !e.inactive;});renEmp();renEmpM();popApplyEmp();
+  }catch(e){}
+}
+function confRem(eid){var e=allEmps.find(function(x){return x.id===eid;});if(!e)return;document.getElementById("confmsg").textContent="Deactivate "+e.name+" ("+e.id+")?";document.getElementById("confok").onclick=async function(){try{await api("DELETE","/api/employees/"+eid);cm("mconf");showToast(e.name+" deactivated. Data preserved.","info");var er=await api("GET","/api/employees");allEmps=er.filter(function(e){return !e.inactive;});renEmp();renEmpM();popApplyEmp();}catch(ex){}};document.getElementById("mconf").classList.add("open");}
+function openCF(){document.getElementById("mcf").classList.add("open");}
+async function doCarryForward(){
+  var year=document.getElementById("cf-year").value;
+  if(!confirm("Process carry forward for ALL "+allEmps.length+" employees for year "+year+"?"))return;
+  try{
+    var res=await api("POST","/api/admin/carry-forward",{year:year});
+    cm("mcf");
+    showToast(res.message,"success");
+    var er=await api("GET","/api/employees");
+    allEmps=er.filter(function(e){return !e.inactive;});
+    renEmp();renEmpM();renBal();renDash();
+  }catch(e){}
+}
+function openAdminPwReset(eid){var e=allEmps.find(function(x){return x.id===eid;});if(!e)return;adminPwTarget=eid;document.getElementById("admin-pw-name").textContent="Resetting password for: "+e.name+" ("+e.id+")";document.getElementById("admin-pw-val").value="";document.getElementById("m-admin-pw").classList.add("open");}
+async function doAdminPwReset(){var pw=document.getElementById("admin-pw-val").value.trim();if(!pw||pw.length<6){showToast("Password must be at least 6 characters.","danger");return;}try{await api("POST","/api/admin/reset-password",{empId:adminPwTarget,newPassword:pw});cm("m-admin-pw");showToast("Password reset and saved successfully.","success");}catch(e){}}
+
+// ── EMPLOYEE SUMMARY REPORT ──────────────────────────────────────────────────
+var repView = 'monthly'; // 'monthly' or 'summary'
+
+function switchRepView(view) {
+  repView = view;
+  var isMonthly = view === 'monthly';
+  // Toggle buttons
+  document.getElementById('btn-monthly').style.background = isMonthly ? 'var(--p600)' : '';
+  document.getElementById('btn-monthly').style.color = isMonthly ? '#fff' : '';
+  document.getElementById('btn-summary').style.background = !isMonthly ? 'var(--p600)' : '';
+  document.getElementById('btn-summary').style.color = !isMonthly ? '#fff' : '';
+  // Toggle views
+  document.getElementById('monthly-view').style.display = isMonthly ? '' : 'none';
+  document.getElementById('summary-view').style.display = !isMonthly ? '' : 'none';
+  document.getElementById('monthly-detail-card').style.display = isMonthly ? '' : 'none';
+  document.getElementById('summary-detail-card').style.display = !isMonthly ? '' : 'none';
+  if (!isMonthly) renSummaryRep();
+}
+
+function renSummaryRep() {
+  var year = repYear;
+  var ef = document.getElementById('rep-emp') ? document.getElementById('rep-emp').value : '';
+  document.getElementById('sum-year-lbl').textContent = year;
+  var empList = ef ? allEmps.filter(function(e){ return e.id === ef; }) : allEmps;
+
+  var rows = empList.map(function(e, idx) {
+    var accrued = calcAccrued(e.doj, year);
+    var totalEntitled = Math.round((e.cf + accrued)*100)/100;
+
+    // Deductible — PL + Sick only
+    var plSickUsed = allLeaves.filter(function(l){
+      return l.eid===e.id && l.status==='Approved' && !isNonDeductible(l) &&
+             new Date(l.from).getFullYear()===year;
+    }).reduce(function(s,l){return s+l.days;},0);
+
+    var available = Math.max(0, Math.round((totalEntitled - plSickUsed)*100)/100);
+
+    // Non-deductible categories — tracked separately
+    function getCatDays(catName) {
+      return allLeaves.filter(function(l){
+        return l.eid===e.id && l.status==='Approved' &&
+               l.cat===catName && new Date(l.from).getFullYear()===year;
+      }).reduce(function(s,l){return s+l.days;},0);
+    }
+    var compOff   = getCatDays('Comp-Off');
+    var overtime  = getCatDays('Overtime');
+    var otherTO   = getCatDays('Other Time Off');
+    var volHours  = getCatDays('Volunteer Hours');
+    var loa       = getCatDays('Leave of Absence');
+
+    var pct = Math.round((plSickUsed / Math.max(totalEntitled,1)) * 100);
+    var ri = allEmps.indexOf(e);
+    var statusColor = available===0?'var(--r600)':available<=3?'var(--a600)':'var(--g600)';
+    var statusBadge = available===0?'bg-r':available<=3?'bg-a':'bg-g';
+    var statusText  = available===0?'Exhausted':available<=3?'Low':'Sufficient';
+
+    return '<tr>'+
+      '<td><div style="display:flex;align-items:center;gap:8px;">'+
+      '<div class="av '+avc(ri)+'" style="width:28px;height:28px;font-size:10px;">'+ini(e.name)+'</div>'+
+      '<div><div style="font-size:13px;font-weight:500;">'+e.name+'</div>'+
+      '<div style="font-size:11px;color:var(--tm);">'+e.email+'</div></div></div></td>'+
+      '<td style="font-family:monospace;font-size:12px;color:var(--ts);">'+e.id+'</td>'+
+      '<td><span class="badge '+(VBADGE[e.vendor]||'bg-gr')+'" style="font-size:10.5px;">'+e.vendor+'</span></td>'+
+      '<td style="font-size:12px;color:var(--ts);">'+e.role+'</td>'+
+      '<td style="text-align:center;font-weight:600;color:var(--b600);">'+e.cf+'</td>'+
+      '<td style="text-align:center;font-weight:600;color:var(--p600);">'+accrued+'</td>'+
+      '<td style="text-align:center;font-weight:700;">'+totalEntitled+'</td>'+
+      '<td style="text-align:center;">'+
+        '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">'+
+        '<span style="font-weight:700;color:var(--r600);">'+plSickUsed+'</span>'+
+        '<div style="width:50px;height:4px;background:var(--gray50);border-radius:3px;">'+
+        '<div style="width:'+Math.min(pct,100)+'%;height:4px;background:var(--r600);border-radius:3px;"></div></div>'+
+        '<span style="font-size:10px;color:var(--tm);">'+pct+'%</span>'+
+        '</div></td>'+
+      '<td style="text-align:center;"><span style="font-size:16px;font-weight:800;color:'+statusColor+';">'+available+'</span>'+
+        '<span style="font-size:11px;color:var(--tm);display:block;">of '+totalEntitled+'</span></td>'+
+      '<td style="text-align:center;color:var(--t600);font-weight:600;">'+(compOff>0?compOff:'—')+'</td>'+
+      '<td style="text-align:center;color:var(--a600);font-weight:600;">'+(overtime>0?overtime:'—')+'</td>'+
+      '<td style="text-align:center;color:var(--p600);font-weight:600;">'+(otherTO>0?otherTO:'—')+'</td>'+
+      '<td style="text-align:center;color:var(--g600);font-weight:600;">'+(volHours>0?volHours:'—')+'</td>'+
+      '<td style="text-align:center;color:var(--co600);font-weight:600;">'+(loa>0?loa:'—')+'</td>'+
+      '<td><span class="badge '+statusBadge+'">'+statusText+'</span></td>'+
+      '</tr>';
+  });
+
+  document.getElementById('sum-body').innerHTML = rows.length ? rows.join('') :
+    '<tr><td colspan="15" style="text-align:center;padding:2rem;color:var(--tm);">No employees found.</td></tr>';
+  document.getElementById('sum-rc').textContent = empList.length + ' employees';
+
+  // Totals row
+  var totAccrued  = empList.reduce(function(s,e){return s+calcAccrued(e.doj,year);},0);
+  var totEntitled = empList.reduce(function(s,e){return s+Math.round((e.cf+calcAccrued(e.doj,year))*100)/100;},0);
+  var totUsed     = empList.reduce(function(s,e){return s+allLeaves.filter(function(l){return l.eid===e.id&&l.status==='Approved'&&!isNonDeductible(l)&&new Date(l.from).getFullYear()===year;}).reduce(function(s2,l){return s2+l.days;},0);},0);
+  var totAvail    = empList.reduce(function(s,e){var ac=calcAccrued(e.doj,year);var us=allLeaves.filter(function(l){return l.eid===e.id&&l.status==='Approved'&&!isNonDeductible(l)&&new Date(l.from).getFullYear()===year;}).reduce(function(s2,l){return s2+l.days;},0);return s+Math.max(0,Math.round((e.cf+ac-us)*100)/100);},0);
+  var totCO   = empList.reduce(function(s,e){return s+allLeaves.filter(function(l){return l.eid===e.id&&l.status==='Approved'&&l.cat==='Comp-Off'&&new Date(l.from).getFullYear()===year;}).reduce(function(s2,l){return s2+l.days;},0);},0);
+  var totOT   = empList.reduce(function(s,e){return s+allLeaves.filter(function(l){return l.eid===e.id&&l.status==='Approved'&&l.cat==='Overtime'&&new Date(l.from).getFullYear()===year;}).reduce(function(s2,l){return s2+l.days;},0);},0);
+  var totOTO  = empList.reduce(function(s,e){return s+allLeaves.filter(function(l){return l.eid===e.id&&l.status==='Approved'&&l.cat==='Other Time Off'&&new Date(l.from).getFullYear()===year;}).reduce(function(s2,l){return s2+l.days;},0);},0);
+  var totVH   = empList.reduce(function(s,e){return s+allLeaves.filter(function(l){return l.eid===e.id&&l.status==='Approved'&&l.cat==='Volunteer Hours'&&new Date(l.from).getFullYear()===year;}).reduce(function(s2,l){return s2+l.days;},0);},0);
+  var totLOA  = empList.reduce(function(s,e){return s+allLeaves.filter(function(l){return l.eid===e.id&&l.status==='Approved'&&l.cat==='Leave of Absence'&&new Date(l.from).getFullYear()===year;}).reduce(function(s2,l){return s2+l.days;},0);},0);
+
+  document.getElementById('sum-body').innerHTML += 
+    '<tr style="background:var(--p50);font-weight:700;">'+
+    '<td colspan="4" style="font-size:13px;color:var(--p800);padding:10px 13px;">TEAM TOTAL ('+empList.length+' employees)</td>'+
+    '<td style="text-align:center;color:var(--b600);">'+empList.reduce(function(s,e){return s+e.cf;},0).toFixed(1)+'</td>'+
+    '<td style="text-align:center;color:var(--p600);">'+totAccrued.toFixed(2)+'</td>'+
+    '<td style="text-align:center;">'+totEntitled.toFixed(2)+'</td>'+
+    '<td style="text-align:center;color:var(--r600);">'+totUsed.toFixed(1)+'</td>'+
+    '<td style="text-align:center;color:var(--g600);">'+totAvail.toFixed(2)+'</td>'+
+    '<td style="text-align:center;color:var(--t600);">'+(totCO||'—')+'</td>'+
+    '<td style="text-align:center;color:var(--a600);">'+(totOT||'—')+'</td>'+
+    '<td style="text-align:center;color:var(--p600);">'+(totOTO||'—')+'</td>'+
+    '<td style="text-align:center;color:var(--g600);">'+(totVH||'—')+'</td>'+
+    '<td style="text-align:center;color:var(--co600);">'+(totLOA||'—')+'</td>'+
+    '<td></td></tr>';
+}
+
+function expSummaryCSV() {
+  var year = repYear;
+  var ef = document.getElementById('rep-emp') ? document.getElementById('rep-emp').value : '';
+  var empList = ef ? allEmps.filter(function(e){ return e.id === ef; }) : allEmps;
+  var rows = [['EMP ID','Employee Name','Vendor','Role','CF','Accrued','Total Entitled',
+               'PL/Sick Used','Available Balance','Comp-Off','Overtime','Other Time Off',
+               'Volunteer Hours','Leave of Absence','Status']];
+  empList.forEach(function(e) {
+    var accrued = calcAccrued(e.doj, year);
+    var totalEntitled = Math.round((e.cf+accrued)*100)/100;
+    var plSickUsed = allLeaves.filter(function(l){
+      return l.eid===e.id&&l.status==='Approved'&&!isNonDeductible(l)&&new Date(l.from).getFullYear()===year;
+    }).reduce(function(s,l){return s+l.days;},0);
+    var available = Math.max(0, Math.round((totalEntitled - plSickUsed)*100)/100);
+    function getCatDays(cat){return allLeaves.filter(function(l){return l.eid===e.id&&l.status==='Approved'&&l.cat===cat&&new Date(l.from).getFullYear()===year;}).reduce(function(s,l){return s+l.days;},0);}
+    var status = available===0?'Exhausted':available<=3?'Low':'Sufficient';
+    rows.push([e.id,e.name,e.vendor,e.role,e.cf,accrued,totalEntitled,plSickUsed,available,
+      getCatDays('Comp-Off'),getCatDays('Overtime'),getCatDays('Other Time Off'),
+      getCatDays('Volunteer Hours'),getCatDays('Leave of Absence'),status]);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('
+');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='EmployeeSummary_'+year+'.csv';a.click();
+  showToast('Employee summary exported.','success');
+}
+
+function popRepEmp(){document.getElementById("rep-emp").innerHTML="<option value=\"\">All employees</option>"+allEmps.map(function(e){return "<option value=\""+e.id+"\">"+e.name+"</option>";}).join("");}
+function changeRepYear(){
+  repYear=parseInt(document.getElementById("rep-year").value);
+  initMC();
+  if(repView==='summary') renSummaryRep();
+}
+function initMC(){document.getElementById("mcs").innerHTML=MONTHS.map(function(m,i){return "<div class=\"mchip"+(i===0?" active":"")+"\" onclick=\"selM(this,"+i+")\">"+m+" "+repYear+"</div>";}).join("");selRM=0;renRep();}
+function selM(el,idx){document.querySelectorAll(".mchip").forEach(function(c){c.classList.remove("active");});el.classList.add("active");selRM=idx;renRep();}
+// CHANGE 1: Cross-month split — counts days in selected month only
+function daysInMonthForLeave(fromStr, toStr, year, month) {
+  var from = new Date(fromStr + "T00:00:00");
+  var to   = new Date(toStr   + "T00:00:00");
+  var mStart = new Date(year, month, 1);
+  var mEnd   = new Date(year, month + 1, 0);
+  var segStart = from > mStart ? from : mStart;
+  var segEnd   = to   < mEnd   ? to   : mEnd;
+  if (segStart > segEnd) return 0;
+  return Math.round((segEnd - segStart) / 86400000) + 1;
+}
+
+function leaveSpansMonth(l, year, month) {
+  var from = new Date(l.from + "T00:00:00");
+  var to   = new Date(l.to   + "T00:00:00");
+  var mStart = new Date(year, month, 1);
+  var mEnd   = new Date(year, month + 1, 0);
+  return from <= mEnd && to >= mStart;
+}
+
+function renRep(){
+  var ef=document.getElementById("rep-emp")?document.getElementById("rep-emp").value:"";
+  var year=repYear;
+  // CROSS-MONTH: include leave if ANY day falls in selected month
+  var data=allLeaves.filter(function(l){
+    return leaveSpansMonth(l, year, selRM) && (ef?l.eid===ef:true);
+  });
+  document.getElementById("rt").textContent="Leaves in "+MONTHS[selRM]+" 2026";
+  var compOffCount=data.filter(function(l){return l.type==="Comp-Off";}).length;
+  var regularCount=data.length-compOffCount;
+  document.getElementById("rc").textContent=data.length+" records"+(compOffCount>0?" ("+compOffCount+" Comp-Off)":"");
+  document.getElementById("rb").innerHTML=data.length?data.map(function(l){
+    var e=ge(l.eid);var ri=allEmps.findIndex(function(x){return x.id===l.eid;});
+    var daysThisMonth = daysInMonthForLeave(l.from, l.to, year, selRM);
+    var isCrossMonth = l.from.substring(0,7) !== l.to.substring(0,7);
+    return "<tr><td><div style=\"display:flex;align-items:center;gap:7px;\"><div class=\"av "+avc(ri)+"\" style=\"width:25px;height:25px;font-size:9.5px;\">"+(e?ini(e.name):"?")+"</div><span style=\"font-weight:500;\">"+(e?e.name:"Unknown")+"</span></div></td><td style=\"font-family:monospace;font-size:11.5px;color:var(--ts);\">"+l.eid+"</td><td><span class=\"badge "+(e?VBADGE[e.vendor]||"bg-gr":"bg-gr")+"\" style=\"font-size:10.5px;\">"+(e?e.vendor:"--")+"</span></td><td style=\"font-size:12px;color:var(--ts);\">"+(e?e.role:"--")+"</td><td><span class=\"badge "+(CBADGE[l.cat]||"bg-gr")+"\" style=\"font-size:10.5px;\">"+l.type.split(/[>/]/).pop().trim()+(l.isCompOff?" (Comp-Off)":"")+"</span></td><td style=\"font-size:12px;\">"+fd(l.from)+(isCrossMonth?" → "+fd(l.to)+(l.from.substring(0,7)!==l.to.substring(0,7)?"<span style=\"font-size:10px;color:var(--p600);margin-left:4px;\">[Cross-month]</span>":""):"")+"</td><td style=\"font-weight:600;\">"+daysThisMonth+(isCrossMonth?"<span style=\"font-size:10px;color:var(--tm);font-weight:400;\"> of "+l.days+" total</span>":"")+"</td><td><span class=\"badge "+(l.status==="Approved"?"bg-g":l.status==="Cancelled"?"bg-gr":l.status==="Rejected"?"bg-r":"bg-a")+"\">"+l.status+"</span></td></tr>";
+  }).join(""):"<tr><td colspan=\"8\" style=\"text-align:center;padding:2rem;color:var(--tm);\">No leave records for this month.</td></tr>";
+}
+function expCSV(){
+  var ef=document.getElementById("rep-emp")?document.getElementById("rep-emp").value:"";
+  var year=repYear;
+  var data=allLeaves.filter(function(l){var d=new Date(l.from);return d.getMonth()===selRM&&d.getFullYear()===year&&(ef?l.eid===ef:true);});
+  var rows=[["EMP ID","Employee Name","Vendor","Role","Category","Leave Type","From","To","Days (This Month)","Total Days","Status","Comp-Off","Reason","Applied On"]];
+  data.forEach(function(l){
+    var e=ge(l.eid);
+    var daysThisMonth=daysInMonthForLeave(l.from,l.to,year,selRM);
+    rows.push([l.eid,e?e.name:"",e?e.vendor:"",e?e.role:"",l.cat,l.type,l.from,l.to,daysThisMonth,l.days,l.status,l.isCompOff?"Yes":"No",l.reason||"",l.applied]);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join("\n");
+  var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="leaves_"+MONTHS[selRM]+"_"+year+".csv";a.click();
+  showToast("Month CSV exported.","success");
+}
+
+// CHANGE 3: Export full year — 12 tabs in Excel using multiple CSV sheets workaround
+// Uses a single CSV with a visible month separator — works in Excel as one file per month
+// For true multi-tab Excel we generate a TSV with sheet markers readable by Excel
+function expFullYearCSV(){
+  var year=repYear;
+  var ef=document.getElementById("rep-emp")?document.getElementById("rep-emp").value:"";
+  // Load SheetJS if not already loaded
+  if(typeof XLSX==="undefined"){
+    var s=document.createElement("script");
+    s.src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload=function(){_doFullYearExport(year,ef);};
+    document.head.appendChild(s);
+    showToast("Loading Excel engine, please wait 2 seconds then click again...","info");
+  } else {
+    _doFullYearExport(year,ef);
+  }
+}
+
+function _doFullYearExport(year,ef){
+  var header=["EMP ID","Employee Name","Vendor","Role","Category","Leave Type","From","To","Days This Month","Total Days","Status","Comp-Off","Reason","Applied On"];
+  var wb=XLSX.utils.book_new();
+  var totalLeaves=0;
+  for(var m=0;m<12;m++){
+    var mData=allLeaves.filter(function(l){return leaveSpansMonth(l,year,m)&&(ef?l.eid===ef:true);});
+    var rows=[header.slice()];
+    mData.forEach(function(l){
+      var e=ge(l.eid);
+      var dm=daysInMonthForLeave(l.from,l.to,year,m);
+      rows.push([l.eid,e?e.name:"",e?e.vendor:"",e?e.role:"",l.cat||"",l.type||"",l.from||"",l.to||"",dm,l.days,l.status,l.isCompOff?"Yes":"No",l.reason||"",l.applied||""]);
+      totalLeaves++;
+    });
+    if(mData.length===0) rows.push(["No leave records for "+MONTHS[m]+" "+year]);
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"]=[{wch:12},{wch:24},{wch:12},{wch:20},{wch:16},{wch:22},{wch:12},{wch:12},{wch:14},{wch:10},{wch:12},{wch:10},{wch:22},{wch:12}];
+    XLSX.utils.book_append_sheet(wb,ws,MONTHS[m].substring(0,3)+" "+year);
+  }
+  XLSX.writeFile(wb,"LeaveReport_"+year+".xlsx");
+  showToast("Full year Excel exported with 12 tabs — "+totalLeaves+" total records.","success");
+}
+</script>
+<div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--sbg);color:#fff;padding:12px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;z-index:9999;box-shadow:0 -2px 20px rgba(0,0,0,.3);">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div style="width:36px;height:36px;background:var(--p600);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/></svg></div>
+    <div><div style="font-size:13px;font-weight:600;">Install LeaveTrack</div><div style="font-size:11px;color:rgba(200,196,240,.7);">Add to your phone home screen</div></div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button onclick="installPWA()" style="padding:8px 16px;background:var(--p600);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;">Install</button>
+    <button onclick="document.getElementById('pwa-banner').style.display='none'" style="padding:8px 12px;background:rgba(255,255,255,.1);color:#fff;border:none;border-radius:8px;font-size:13px;cursor:pointer;">Later</button>
+  </div>
+</div>
+<script>
+
+// ═══════════════════════════════════════════════════════════════════════
+// SECURITY FEATURES — Idle timeout, screen blur, refresh button
+// ═══════════════════════════════════════════════════════════════════════
+
+var IDLE_BLUR_MINS    = 5;    // Blur screen after 5 min idle
+var IDLE_WARN_MINS    = 28;   // Show warning at 28 min (2 min before logout)
+var IDLE_LOGOUT_MINS  = 30;   // Auto logout after 30 min idle
+var idleTimer         = null;
+var warnTimer         = null;
+var logoutTimer       = null;
+var countdownInterval = null;
+var isBlurred         = false;
+var lastRefreshTime   = null;
+
+// ── Start all security timers ─────────────────────────────────────────
+function startSecurityTimers() {
+  clearAllTimers();
+
+  // Blur after 5 min
+  idleTimer = setTimeout(function() {
+    blurScreen();
+  }, IDLE_BLUR_MINS * 60 * 1000);
+
+  // Warning at 28 min
+  warnTimer = setTimeout(function() {
+    showTimeoutWarning();
+  }, IDLE_WARN_MINS * 60 * 1000);
+
+  // Auto logout at 30 min
+  logoutTimer = setTimeout(function() {
+    autoLogout();
+  }, IDLE_LOGOUT_MINS * 60 * 1000);
+}
+
+function clearAllTimers() {
+  if(idleTimer)    clearTimeout(idleTimer);
+  if(warnTimer)    clearTimeout(warnTimer);
+  if(logoutTimer)  clearTimeout(logoutTimer);
+  if(countdownInterval) clearInterval(countdownInterval);
+  document.getElementById('timeout-banner').classList.remove('show');
+}
+
+// ── Reset idle timer on any user activity ────────────────────────────
+function resetIdleTimer() {
+  clearAllTimers();
+  startSecurityTimers();
+  // If blurred, unblur
+  if(isBlurred) unblurScreen();
+  // Update last active time
+  updateLastActive();
+}
+
+// ── Blur screen after idle ───────────────────────────────────────────
+function blurScreen() {
+  isBlurred = true;
+  document.getElementById('security-blur').classList.add('show');
+}
+
+function unblurScreen() {
+  isBlurred = false;
+  document.getElementById('security-blur').classList.remove('show');
+  resetIdleTimer();
+}
+
+// ── Timeout warning countdown ────────────────────────────────────────
+function showTimeoutWarning() {
+  var banner = document.getElementById('timeout-banner');
+  banner.classList.add('show');
+  var secs = 120; // 2 minutes countdown
+  updateCountdown(secs);
+  countdownInterval = setInterval(function() {
+    secs--;
+    updateCountdown(secs);
+    if(secs <= 0) {
+      clearInterval(countdownInterval);
+      banner.classList.remove('show');
+    }
+  }, 1000);
+}
+
+function updateCountdown(secs) {
+  var m = Math.floor(secs / 60);
+  var s = secs % 60;
+  var el = document.getElementById('timeout-countdown');
+  if(el) el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+// ── Auto logout on idle ──────────────────────────────────────────────
+async function autoLogout() {
+  clearAllTimers();
+  try { await api('POST', '/api/logout'); } catch(e) {}
+  cu = null; allEmps = []; allLeaves = [];
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-page').style.display = 'flex';
+  document.getElementById('inp-pass').value = '';
+  document.getElementById('security-blur').classList.remove('show');
+  showToast('Session expired after 30 minutes of inactivity. Please login again.', 'danger');
+}
+
+// ── Track user activity ──────────────────────────────────────────────
+function initActivityTracking() {
+  var events = ['mousedown','mousemove','keypress','scroll','touchstart','click'];
+  events.forEach(function(evt) {
+    document.addEventListener(evt, function() {
+      if(cu) resetIdleTimer();
+    }, { passive: true });
+  });
+}
+
+// ── Refresh button (admin only) ──────────────────────────────────────
+async function refreshAllData() {
+  var btn = document.getElementById('refresh-btn');
+  if(btn) btn.classList.add('spinning');
+  try {
+    await loadAll();
+    // Re-render current active page
+    var activePage = document.querySelector('.page.active');
+    if(activePage) {
+      var pid = activePage.id.replace('page-','');
+      if(pid === 'dashboard') renDash();
+      else if(pid === 'approvals') renApp();
+      else if(pid === 'employees') { renEmp(); renEmpM(); }
+      else if(pid === 'report') renRep();
+      else if(pid === 'balance') renBal();
+      else if(pid === 'calendar') renCal();
+      else if(pid === 'timeline') renTimeline();
+      else if(pid === 'charts') renCharts();
+      else if(pid === 'apply') renApSum();
+    }
+    updateLastActive();
+    showToast('Data refreshed successfully.', 'success');
+  } catch(e) {
+    showToast('Refresh failed. Please try again.', 'danger');
+  } finally {
+    if(btn) btn.classList.remove('spinning');
+  }
+}
+
+// ── Update last active timestamp ─────────────────────────────────────
+function updateLastActive() {
+  lastRefreshTime = new Date();
+  var el = document.getElementById('topbar-lastactive');
+  if(el) {
+    el.textContent = 'Last refreshed: ' + lastRefreshTime.toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+  }
+}
+
+// ── Show/hide topbar based on role ───────────────────────────────────
+function initTopbar() {
+  var topbar = document.getElementById('main-topbar');
+  if(topbar) {
+    // Show for admin only — with refresh button
+    // Show for all users — without refresh button (security indicators only)
+    topbar.style.display = 'flex';
+    var refreshBtn = document.getElementById('refresh-btn');
+    if(refreshBtn) {
+      refreshBtn.style.display = cu && cu.role === 'admin' ? 'flex' : 'none';
+    }
+    updateLastActive();
+  }
+}
+
+// ── Page visibility — blur when tab hidden ───────────────────────────
+document.addEventListener('visibilitychange', function() {
+  if(document.hidden && cu && !isBlurred) {
+    // Page hidden — start aggressive timer (2 min)
+    setTimeout(function() {
+      if(document.hidden && cu) blurScreen();
+    }, 2 * 60 * 1000);
+  }
+});
+
+// PWA Service Worker registration
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/sw.js').then(function(reg){
+      console.log('SW registered');
+    }).catch(function(err){ console.log('SW error:',err); });
+  });
+}
+// PWA Install prompt
+var deferredPrompt;
+window.addEventListener('beforeinstallprompt',function(e){
+  e.preventDefault();
+  deferredPrompt=e;
+  var b=document.getElementById('pwa-banner');
+  if(b) b.style.display='flex';
+});
+function installPWA(){
+  if(deferredPrompt){
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(c){
+      deferredPrompt=null;
+      document.getElementById('pwa-banner').style.display='none';
+    });
+  }
+}
+window.addEventListener('appinstalled',function(){
+  document.getElementById('pwa-banner').style.display='none';
+  showToast('LeaveTrack installed on your device!','success');
+});
+</script>
+</body>
+</html>
