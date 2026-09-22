@@ -734,8 +734,13 @@ function empUsed(id){
 }
 
 // PHASE 3: Monthly accrual calculation
-// 1.75 days per month from Jan 2026 or DOJ (whichever is later)
+// Option B: 2026 uses old system (full intake), 2027+ uses 1.75/month accrual
 function calcAccrued(doj, year){
+  // 2026 and earlier: use full annual intake (21 days) — no monthly accrual
+  // This preserves fairness for employees who planned leaves on old system
+  if(year <= 2026) return null; // null = use e.bal (old system)
+
+  // 2027 onwards: monthly accrual 1.75/month
   var now = new Date();
   var currentYear = now.getFullYear();
   var currentMonth = now.getMonth(); // 0-based
@@ -757,25 +762,33 @@ function calcAccrued(doj, year){
   return Math.min(Math.round(monthsAccrued * 1.75 * 100) / 100, 21);
 }
 
-// Available balance = CF + Accrued - Used (deductible only)
+// Available balance
+// 2026: CF + intake (e.bal) - used  |  2027+: CF + accrued - used
 function empBal(id){
   var e=ge(id); if(!e) return 0;
-  var accrued=calcAccrued(e.doj, new Date().getFullYear());
+  var year=new Date().getFullYear();
+  var accrued=calcAccrued(e.doj, year);
+  var totalEntitled = accrued===null ? e.bal : Math.round((e.cf+accrued)*100)/100;
   var used=empUsed(id);
-  return Math.max(0, Math.round((e.cf + accrued - used)*100)/100);
+  return Math.max(0, Math.round((totalEntitled - used)*100)/100);
 }
 
-// Total entitled balance (CF + full accrued to date)
+// Total entitled balance
+// 2026: returns e.bal (full intake)  |  2027+: returns CF + accrued
 function empAccrued(id){
   var e=ge(id); if(!e) return 0;
-  return calcAccrued(e.doj, new Date().getFullYear());
+  var year=new Date().getFullYear();
+  var accrued=calcAccrued(e.doj, year);
+  return accrued===null ? e.bal : Math.round((e.cf+accrued)*100)/100;
 }
 
-// LWP days = days used beyond entitlement (excess PL/Sick over total entitled)
+// LWP days = days used beyond entitlement
+// 2026: based on e.bal  |  2027+: based on accrual
 function empLWP(id){
   var e=ge(id); if(!e) return 0;
-  var accrued=calcAccrued(e.doj, new Date().getFullYear());
-  var totalEntitled=Math.round((e.cf+accrued)*100)/100;
+  var year=new Date().getFullYear();
+  var accrued=calcAccrued(e.doj, year);
+  var totalEntitled=accrued===null ? e.bal : Math.round((e.cf+accrued)*100)/100;
   var used=empUsed(id);
   var excess=Math.round((used-totalEntitled)*100)/100;
   return excess>0 ? excess : 0;
@@ -928,16 +941,19 @@ function filtLT(){document.getElementById("atyp").innerHTML=(LCATS[document.getE
 function updBal(){
   var id=cu.role==="admin"?document.getElementById("aem").value:cu.id;
   var e=ge(id);if(!e)return;
-  var accrued=empAccrued(id);
+  var year=new Date().getFullYear();
+  var accrued=calcAccrued(e.doj,year);
+  var total=accrued===null?e.bal:Math.round((e.cf+accrued)*100)/100;
+  var midLabel=accrued===null?"Intake":"Accrued";
+  var midVal=accrued===null?e.intake:accrued;
   var b=empBal(id);
   var used=empUsed(id);
-  var total=Math.round((e.cf+accrued)*100)/100;
   document.getElementById("abal").innerHTML=
     "<strong>"+e.name+"</strong><br>"+
     "<span style=\"font-size:12px;color:var(--ts);\">"+
     "CF: <strong>"+e.cf+"</strong> &nbsp;+&nbsp; "+
-    "Accrued: <strong>"+accrued+"</strong> &nbsp;=&nbsp; "+
-    "Total entitled: <strong>"+total+"</strong> &nbsp;|&nbsp; "+
+    midLabel+": <strong>"+midVal+"</strong> &nbsp;=&nbsp; "+
+    "Total: <strong>"+total+"</strong> &nbsp;|&nbsp; "+
     "PL/Sick used: <strong style=\"color:var(--r600)\">"+used+"</strong> &nbsp;|&nbsp; "+
     "<strong style=\"color:"+(b<3?"var(--r600)":b<8?"var(--a600)":"var(--g600)")+"\">Available: "+b+" days</strong>"+
     "</span>";
@@ -988,16 +1004,39 @@ async function _subLeave(){
 function clrApply(){document.getElementById("afr").value="";document.getElementById("ato").value="";document.getElementById("ars").value="";}
 
 function renBal(){
-  var sel=document.getElementById("balemp");var cur=sel.value;sel.innerHTML="";
+  var sel=document.getElementById("balemp");
+  // Save current selection before rebuilding
+  var cur=sel.value;
+  sel.innerHTML="";
   var list=cu&&cu.role==="admin"?allEmps:[ge(cu?cu.id:"")].filter(Boolean);
-  list.forEach(function(e){var o=document.createElement("option");o.value=e.id;o.textContent=e.name+" ("+e.id+")";sel.appendChild(o);});
-  if(cu&&cu.role==="employee"){sel.value=cu.id;sel.style.display="none";}else{sel.style.display="";if(cur)sel.value=cur;}
-  var id=sel.value;var e=ge(id);if(!e)return;
+  list.forEach(function(e){
+    var o=document.createElement("option");
+    o.value=e.id;
+    o.textContent=e.name+" ("+e.id+")";
+    sel.appendChild(o);
+  });
+  if(cu&&cu.role==="employee"){
+    sel.value=cu.id;
+    sel.style.display="none";
+  } else {
+    sel.style.display="";
+    // Restore previous selection OR default to first employee
+    if(cur && ge(cur)) sel.value=cur;
+    else if(list.length>0) sel.value=list[0].id;
+  }
+  // Get the ACTUALLY selected employee from dropdown
+  var id=sel.value;
+  var e=ge(id);
+  if(!e)return;
   var used=empUsed(id);
   var bal=empBal(id);
+  var lwp=empLWP(id);
   var ri=allEmps.indexOf(e);
-  var accrued=calcAccrued(e.doj,new Date().getFullYear());
-  var totalEntitled=Math.round((e.cf+accrued)*100)/100;
+  var year=new Date().getFullYear();
+  var accrued=calcAccrued(e.doj,year); // null for 2026
+  var totalEntitled=accrued===null ? e.bal : Math.round((e.cf+accrued)*100)/100;
+  var midLabel=accrued===null ? "Annual Intake" : "Accrued (1.75/mo)";
+  var midValue=accrued===null ? e.intake : accrued;
   var hdrEl=document.getElementById("bal-hdr");
   var lwp=empLWP(id);
   var hdrDiv=document.createElement("div");
@@ -1007,22 +1046,28 @@ function renBal(){
     "<div><div style='font-size:15px;font-weight:700;'>"+e.name+"</div>"+
     "<div style='font-size:12px;color:var(--tm);'>"+e.id+" &bull; "+e.vendor+" &bull; "+e.role+"</div></div></div></div>"+
     "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:var(--b600);'>"+e.cf+"</div><div style='font-size:11px;color:var(--tm);'>Carry Forward</div></div>"+
-    "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:var(--p600);'>"+accrued+"</div><div style='font-size:11px;color:var(--tm);'>Accrued (1.75/mo)</div></div>"+
+    "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:var(--p600);'>"+midValue+"</div><div style='font-size:11px;color:var(--tm);'>"+midLabel+"</div></div>"+
     "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:#185FA5;'>"+totalEntitled+"</div><div style='font-size:11px;color:var(--tm);'>Total Entitled</div></div>"+
     "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:var(--r600);'>"+used+"</div><div style='font-size:11px;color:var(--tm);'>PL/Sick Used</div></div>"+
     "<div style='text-align:center;'><div style='font-size:22px;font-weight:800;color:"+(bal<3?"var(--r600)":bal<8?"var(--a600)":"var(--g600)")+"'>"+bal+"</div><div style='font-size:11px;color:var(--tm);'>Available Balance</div></div>"+
     (lwp>0?"<div style='text-align:center;background:var(--r50);border-radius:8px;padding:8px;'><div style='font-size:20px;font-weight:700;color:var(--r600);'>"+lwp+"</div><div style='font-size:11px;color:var(--r600);font-weight:600;'>LWP Days</div></div>":"");
   hdrEl.innerHTML="";hdrEl.appendChild(hdrDiv);
 
-  // Show LWP warning banner if applicable
-  var lwpWarn=document.getElementById("lwp-warning-"+id);
+  // Clear ALL previous LWP warnings before adding new one
+  var oldWarnings=document.querySelectorAll(".lwp-warning-banner");
+  oldWarnings.forEach(function(w){ w.remove(); });
   if(lwp>0){
-    var warnHtml="<div class='warn-box' style='margin-top:1rem;background:var(--r50);border-left-color:var(--r600);color:var(--r800);'>"+
-      "<strong>⚠️ Leave Without Pay Alert:</strong> "+e.name.split(" ")[0]+" has used "+used+" days of PL/Sick leave "+
-      "but is only entitled to "+totalEntitled+" days (CF "+e.cf+" + Accrued "+accrued+"). "+
-      "<strong>"+lwp+" day(s) will be treated as Leave Without Pay (LWP)</strong> and may result in salary deduction."+
-      "</div>";
-    hdrEl.insertAdjacentHTML("afterend", warnHtml);
+    var warnDiv=document.createElement("div");
+    warnDiv.className="warn-box lwp-warning-banner";
+    warnDiv.style.cssText="margin-top:1rem;background:var(--r50);border-left-color:var(--r600);color:var(--r800);";
+    var year=new Date().getFullYear();
+    var accrued=calcAccrued(e.doj,year);
+    var totalEntitled=accrued===null?e.bal:Math.round((e.cf+accrued)*100)/100;
+    warnDiv.innerHTML="<strong>⚠️ Leave Without Pay Alert:</strong> "+e.name.split(" ")[0]+
+      " has used <strong>"+used+"</strong> days of PL/Sick leave but is only entitled to "+
+      "<strong>"+totalEntitled+"</strong> days. "+
+      "<strong>"+lwp+" day(s) are Leave Without Pay (LWP)</strong> — may result in salary deduction.";
+    hdrEl.parentNode.insertBefore(warnDiv, hdrEl.nextSibling);
   }
 
   var html="";
@@ -1223,7 +1268,9 @@ function renSummaryRep() {
 
   var rows = empList.map(function(e, idx) {
     var accrued = calcAccrued(e.doj, year);
-    var totalEntitled = Math.round((e.cf + accrued)*100)/100;
+    // Option B: 2026 uses e.bal, 2027+ uses CF+accrued
+    var totalEntitled = accrued===null ? e.bal : Math.round((e.cf+accrued)*100)/100;
+    var accrualDisplay = accrued===null ? e.intake : accrued;
 
     // Deductible — PL + Sick only
     var plSickUsed = allLeaves.filter(function(l){
@@ -1262,7 +1309,7 @@ function renSummaryRep() {
       '<td><span class="badge '+(VBADGE[e.vendor]||'bg-gr')+'" style="font-size:10.5px;">'+e.vendor+'</span></td>'+
       '<td style="font-size:12px;color:var(--ts);">'+e.role+'</td>'+
       '<td style="text-align:center;font-weight:600;color:var(--b600);">'+e.cf+'</td>'+
-      '<td style="text-align:center;font-weight:600;color:var(--p600);">'+accrued+'</td>'+
+      '<td style="text-align:center;font-weight:600;color:var(--p600);">'+accrualDisplay+'</td>'+
       '<td style="text-align:center;font-weight:700;">'+totalEntitled+'</td>'+
       '<td style="text-align:center;">'+
         '<div style="display:flex;flex-direction:column;align-items:center;gap:3px;">'+
@@ -1331,7 +1378,7 @@ function expSummaryCSV() {
     var lwpDays = Math.max(0, Math.round((plSickUsed - totalEntitled)*100)/100);
     function getCatDays(cat){return allLeaves.filter(function(l){return l.eid===e.id&&l.status==='Approved'&&l.cat===cat&&new Date(l.from).getFullYear()===year;}).reduce(function(s,l){return s+l.days;},0);}
     var status = available===0?'Exhausted':available<=3?'Low':'Sufficient';
-    rows.push([e.id,e.name,e.vendor,e.role,e.cf,accrued,totalEntitled,plSickUsed,available,lwpDays||0,
+    rows.push([e.id,e.name,e.vendor,e.role,e.cf,accrualDisplay,totalEntitled,plSickUsed,available,lwpDays||0,
       getCatDays('Comp-Off'),getCatDays('Overtime'),getCatDays('Other Time Off'),
       getCatDays('Volunteer Hours'),getCatDays('Leave of Absence'),status]);
   });
@@ -1728,7 +1775,9 @@ function _drawBalanceChart(year) {
   });
   var balLeft = allE.map(function(e,i){
     var accrued = calcAccrued(e.doj, year);
-    return Math.max(0, Math.round((e.cf + accrued - taken[i])*100)/100);
+    // 2026: use e.bal | 2027+: CF + accrued
+    var entitled = accrued===null ? e.bal : Math.round((e.cf+accrued)*100)/100;
+    return Math.max(0, Math.round((entitled - taken[i])*100)/100);
   });
   var names = allE.map(function(e){ return e.name.split(' ')[0]; });
   var ctx = document.getElementById('chart-balance');
