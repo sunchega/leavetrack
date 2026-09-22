@@ -286,6 +286,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#FAFAFA;}
   .topbar-time{display:none;}
 }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 </head>
 <body>
 <div id="loader" class="loader"><div class="spin"></div></div>
@@ -1598,6 +1599,131 @@ document.addEventListener('visibilitychange', function() {
     }, 2 * 60 * 1000);
   }
 });
+
+
+// ═══════════════════════════════════════════════════════
+// CHARTS & ANALYTICS
+// ═══════════════════════════════════════════════════════
+var chartInstances = {};
+
+function destroyChart(id) {
+  if(chartInstances[id]){ chartInstances[id].destroy(); delete chartInstances[id]; }
+}
+
+function renCharts() {
+  var year = parseInt(document.getElementById('chart-year').value);
+  _drawAllCharts(year);
+}
+
+function _drawAllCharts(year) {
+  _drawMonthlyChart(year);
+  _drawTypesChart(year);
+  _drawVendorChart(year);
+  _drawBalanceChart(year);
+}
+
+function _drawMonthlyChart(year) {
+  destroyChart('monthly');
+  var approved = allLeaves.filter(function(l){ return l.status==='Approved' && !isNonDeductible(l); });
+  var data = MONTHS.map(function(m,i){
+    return approved.filter(function(l){ return leaveSpansMonth(l,year,i); })
+      .reduce(function(s,l){ return s+daysInMonthForLeave(l.from,l.to,year,i); },0);
+  });
+  var ctx = document.getElementById('chart-monthly');
+  if(!ctx) return;
+  chartInstances['monthly'] = new Chart(ctx.getContext('2d'), {
+    type:'bar',
+    data:{ labels:MONTHS.map(function(m){return m.substring(0,3);}),
+      datasets:[{ label:'Leave Days', data:data,
+        backgroundColor:'rgba(83,74,183,0.7)', borderColor:'#534AB7',
+        borderWidth:1, borderRadius:5 }]},
+    options:{ responsive:true, plugins:{ legend:{display:false} },
+      scales:{ y:{ beginAtZero:true, ticks:{ stepSize:1 } } } }
+  });
+}
+
+function _drawTypesChart(year) {
+  destroyChart('types');
+  var approved = allLeaves.filter(function(l){
+    return l.status==='Approved' && new Date(l.from).getFullYear()===year;
+  });
+  var typeCounts = {};
+  approved.forEach(function(l){
+    var t = l.cat || 'Other';
+    typeCounts[t] = (typeCounts[t]||0) + l.days;
+  });
+  var labels = Object.keys(typeCounts);
+  var vals = labels.map(function(k){ return typeCounts[k]; });
+  var colors = ['#534AB7','#3B6D11','#A32D2D','#854F0B','#0F6E56','#185FA5','#993C1D','#5F5E5A'];
+  var ctx = document.getElementById('chart-types');
+  if(!ctx) return;
+  chartInstances['types'] = new Chart(ctx.getContext('2d'), {
+    type:'doughnut',
+    data:{ labels:labels, datasets:[{ data:vals,
+      backgroundColor:colors.slice(0,labels.length), borderWidth:2 }]},
+    options:{ responsive:true, plugins:{ legend:{ position:'bottom',
+      labels:{ font:{size:11}, padding:8 } } } }
+  });
+}
+
+function _drawVendorChart(year) {
+  destroyChart('vendor');
+  var approved = allLeaves.filter(function(l){
+    return l.status==='Approved' && new Date(l.from).getFullYear()===year;
+  });
+  var vendors = allEmps.map(function(e){return e.vendor;})
+    .filter(function(v,i,a){return a.indexOf(v)===i;}).sort();
+  var data = vendors.map(function(v){
+    var empIds = allEmps.filter(function(e){return e.vendor===v;}).map(function(e){return e.id;});
+    return approved.filter(function(l){return empIds.indexOf(l.eid)>-1;})
+      .reduce(function(s,l){return s+l.days;},0);
+  });
+  var colors = ['#534AB7','#3B6D11','#A32D2D','#854F0B','#185FA5'];
+  var ctx = document.getElementById('chart-vendor');
+  if(!ctx) return;
+  chartInstances['vendor'] = new Chart(ctx.getContext('2d'), {
+    type:'bar',
+    data:{ labels:vendors, datasets:[{ label:'Leave Days', data:data,
+      backgroundColor:colors, borderRadius:5 }]},
+    options:{ responsive:true, plugins:{ legend:{display:false} },
+      scales:{ y:{ beginAtZero:true } } }
+  });
+}
+
+function _drawBalanceChart(year) {
+  destroyChart('balance');
+  var allE = allEmps;
+  var taken = allE.map(function(e){
+    return allLeaves.filter(function(l){
+      return l.eid===e.id && l.status==='Approved' && !isNonDeductible(l) &&
+             new Date(l.from).getFullYear()===year;
+    }).reduce(function(s,l){return s+l.days;},0);
+  });
+  var balLeft = allE.map(function(e,i){
+    var accrued = calcAccrued(e.doj, year);
+    return Math.max(0, Math.round((e.cf + accrued - taken[i])*100)/100);
+  });
+  var names = allE.map(function(e){ return e.name.split(' ')[0]; });
+  var ctx = document.getElementById('chart-balance');
+  if(!ctx) return;
+  chartInstances['balance'] = new Chart(ctx.getContext('2d'), {
+    type:'bar',
+    data:{ labels:names, datasets:[
+      { label:'Used', data:taken, backgroundColor:'rgba(163,45,45,0.7)', borderRadius:4, stack:'s' },
+      { label:'Remaining', data:balLeft, backgroundColor:'rgba(59,109,17,0.7)', borderRadius:4, stack:'s' }
+    ]},
+    options:{
+      indexAxis:'y',
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{ legend:{ position:'bottom', labels:{font:{size:11}} } },
+      scales:{
+        x:{ stacked:true, beginAtZero:true, ticks:{ font:{size:10} } },
+        y:{ stacked:true, ticks:{ font:{size:10} } }
+      }
+    }
+  });
+}
 
 // PWA Service Worker registration
 if('serviceWorker' in navigator){
