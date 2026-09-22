@@ -733,12 +733,12 @@ function empUsed(id){
   }).reduce(function(s,l){return s+l.days;},0);
 }
 
-// PHASE 3: Monthly accrual calculation
-// 1.75 days per month from Jan 2026 or DOJ (whichever is later)
+// Monthly accrual: 1.75 days/month from Jan or DOJ (whichever later)
+// Applies to ALL years including 2026
 function calcAccrued(doj, year){
   var now = new Date();
   var currentYear = now.getFullYear();
-  var currentMonth = now.getMonth(); // 0-based
+  var currentMonth = now.getMonth(); // 0-based (Jan=0)
 
   var dojDate = doj ? new Date(doj) : new Date(year+"-01-01");
   var yearStart = new Date(year+"-01-01");
@@ -757,24 +757,29 @@ function calcAccrued(doj, year){
   return Math.min(Math.round(monthsAccrued * 1.75 * 100) / 100, 21);
 }
 
-// Available balance = CF + Accrued - Used (deductible only)
+// Available balance = CF + Accrued - PL/Sick Used
 function empBal(id){
   var e=ge(id); if(!e) return 0;
-  var accrued=calcAccrued(e.doj, new Date().getFullYear());
+  var year=new Date().getFullYear();
+  var accrued=calcAccrued(e.doj, year);
+  var totalEntitled=Math.round((e.cf+accrued)*100)/100;
   var used=empUsed(id);
-  return Math.max(0, Math.round((e.cf + accrued - used)*100)/100);
+  return Math.max(0, Math.round((totalEntitled - used)*100)/100);
 }
 
-// Total entitled balance (CF + full accrued to date)
+// Total entitled = CF + Accrued
 function empAccrued(id){
   var e=ge(id); if(!e) return 0;
-  return calcAccrued(e.doj, new Date().getFullYear());
+  var year=new Date().getFullYear();
+  var accrued=calcAccrued(e.doj, year);
+  return Math.round((e.cf+accrued)*100)/100;
 }
 
-// LWP days = days used beyond entitlement (excess PL/Sick over total entitled)
+// LWP = excess PL/Sick used beyond total entitled (CF + Accrued)
 function empLWP(id){
   var e=ge(id); if(!e) return 0;
-  var accrued=calcAccrued(e.doj, new Date().getFullYear());
+  var year=new Date().getFullYear();
+  var accrued=calcAccrued(e.doj, year);
   var totalEntitled=Math.round((e.cf+accrued)*100)/100;
   var used=empUsed(id);
   var excess=Math.round((used-totalEntitled)*100)/100;
@@ -928,16 +933,17 @@ function filtLT(){document.getElementById("atyp").innerHTML=(LCATS[document.getE
 function updBal(){
   var id=cu.role==="admin"?document.getElementById("aem").value:cu.id;
   var e=ge(id);if(!e)return;
-  var accrued=empAccrued(id);
+  var year=new Date().getFullYear();
+  var accrued=calcAccrued(e.doj,year);
+  var total=Math.round((e.cf+accrued)*100)/100;
   var b=empBal(id);
   var used=empUsed(id);
-  var total=Math.round((e.cf+accrued)*100)/100;
   document.getElementById("abal").innerHTML=
     "<strong>"+e.name+"</strong><br>"+
     "<span style=\"font-size:12px;color:var(--ts);\">"+
     "CF: <strong>"+e.cf+"</strong> &nbsp;+&nbsp; "+
     "Accrued: <strong>"+accrued+"</strong> &nbsp;=&nbsp; "+
-    "Total entitled: <strong>"+total+"</strong> &nbsp;|&nbsp; "+
+    "Total: <strong>"+total+"</strong> &nbsp;|&nbsp; "+
     "PL/Sick used: <strong style=\"color:var(--r600)\">"+used+"</strong> &nbsp;|&nbsp; "+
     "<strong style=\"color:"+(b<3?"var(--r600)":b<8?"var(--a600)":"var(--g600)")+"\">Available: "+b+" days</strong>"+
     "</span>";
@@ -988,15 +994,36 @@ async function _subLeave(){
 function clrApply(){document.getElementById("afr").value="";document.getElementById("ato").value="";document.getElementById("ars").value="";}
 
 function renBal(){
-  var sel=document.getElementById("balemp");var cur=sel.value;sel.innerHTML="";
+  var sel=document.getElementById("balemp");
+  // Save current selection before rebuilding
+  var cur=sel.value;
+  sel.innerHTML="";
   var list=cu&&cu.role==="admin"?allEmps:[ge(cu?cu.id:"")].filter(Boolean);
-  list.forEach(function(e){var o=document.createElement("option");o.value=e.id;o.textContent=e.name+" ("+e.id+")";sel.appendChild(o);});
-  if(cu&&cu.role==="employee"){sel.value=cu.id;sel.style.display="none";}else{sel.style.display="";if(cur)sel.value=cur;}
-  var id=sel.value;var e=ge(id);if(!e)return;
+  list.forEach(function(e){
+    var o=document.createElement("option");
+    o.value=e.id;
+    o.textContent=e.name+" ("+e.id+")";
+    sel.appendChild(o);
+  });
+  if(cu&&cu.role==="employee"){
+    sel.value=cu.id;
+    sel.style.display="none";
+  } else {
+    sel.style.display="";
+    // Restore previous selection OR default to first employee
+    if(cur && ge(cur)) sel.value=cur;
+    else if(list.length>0) sel.value=list[0].id;
+  }
+  // Get the ACTUALLY selected employee from dropdown
+  var id=sel.value;
+  var e=ge(id);
+  if(!e)return;
   var used=empUsed(id);
   var bal=empBal(id);
+  var lwp=empLWP(id);
   var ri=allEmps.indexOf(e);
-  var accrued=calcAccrued(e.doj,new Date().getFullYear());
+  var year=new Date().getFullYear();
+  var accrued=calcAccrued(e.doj,year);
   var totalEntitled=Math.round((e.cf+accrued)*100)/100;
   var hdrEl=document.getElementById("bal-hdr");
   var lwp=empLWP(id);
@@ -1014,15 +1041,21 @@ function renBal(){
     (lwp>0?"<div style='text-align:center;background:var(--r50);border-radius:8px;padding:8px;'><div style='font-size:20px;font-weight:700;color:var(--r600);'>"+lwp+"</div><div style='font-size:11px;color:var(--r600);font-weight:600;'>LWP Days</div></div>":"");
   hdrEl.innerHTML="";hdrEl.appendChild(hdrDiv);
 
-  // Show LWP warning banner if applicable
-  var lwpWarn=document.getElementById("lwp-warning-"+id);
+  // Clear ALL previous LWP warnings before adding new one
+  var oldWarnings=document.querySelectorAll(".lwp-warning-banner");
+  oldWarnings.forEach(function(w){ w.remove(); });
   if(lwp>0){
-    var warnHtml="<div class='warn-box' style='margin-top:1rem;background:var(--r50);border-left-color:var(--r600);color:var(--r800);'>"+
-      "<strong>⚠️ Leave Without Pay Alert:</strong> "+e.name.split(" ")[0]+" has used "+used+" days of PL/Sick leave "+
-      "but is only entitled to "+totalEntitled+" days (CF "+e.cf+" + Accrued "+accrued+"). "+
-      "<strong>"+lwp+" day(s) will be treated as Leave Without Pay (LWP)</strong> and may result in salary deduction."+
-      "</div>";
-    hdrEl.insertAdjacentHTML("afterend", warnHtml);
+    var warnDiv=document.createElement("div");
+    warnDiv.className="warn-box lwp-warning-banner";
+    warnDiv.style.cssText="margin-top:1rem;background:var(--r50);border-left-color:var(--r600);color:var(--r800);";
+    var year=new Date().getFullYear();
+    var accrued=calcAccrued(e.doj,year);
+    var totalEntitled=accrued===null?e.bal:Math.round((e.cf+accrued)*100)/100;
+    warnDiv.innerHTML="<strong>⚠️ Leave Without Pay Alert:</strong> "+e.name.split(" ")[0]+
+      " has used <strong>"+used+"</strong> days of PL/Sick leave but is only entitled to "+
+      "<strong>"+totalEntitled+"</strong> days. "+
+      "<strong>"+lwp+" day(s) are Leave Without Pay (LWP)</strong> — may result in salary deduction.";
+    hdrEl.parentNode.insertBefore(warnDiv, hdrEl.nextSibling);
   }
 
   var html="";
@@ -1223,7 +1256,7 @@ function renSummaryRep() {
 
   var rows = empList.map(function(e, idx) {
     var accrued = calcAccrued(e.doj, year);
-    var totalEntitled = Math.round((e.cf + accrued)*100)/100;
+    var totalEntitled = Math.round((e.cf+accrued)*100)/100;
 
     // Deductible — PL + Sick only
     var plSickUsed = allLeaves.filter(function(l){
@@ -1728,7 +1761,8 @@ function _drawBalanceChart(year) {
   });
   var balLeft = allE.map(function(e,i){
     var accrued = calcAccrued(e.doj, year);
-    return Math.max(0, Math.round((e.cf + accrued - taken[i])*100)/100);
+    var entitled = Math.round((e.cf+accrued)*100)/100;
+    return Math.max(0, Math.round((entitled - taken[i])*100)/100);
   });
   var names = allE.map(function(e){ return e.name.split(' ')[0]; });
   var ctx = document.getElementById('chart-balance');
@@ -1750,6 +1784,115 @@ function _drawBalanceChart(year) {
       }
     }
   });
+}
+
+
+// ═══════════════════════════════════════════════════════
+// LEAVE HISTORY TIMELINE
+// ═══════════════════════════════════════════════════════
+function renTimeline() {
+  var isAdmin = cu && cu.role === 'admin';
+  var sel = document.getElementById('tl-emp');
+  if(sel) sel.style.display = isAdmin ? '' : 'none';
+
+  if (isAdmin && sel && sel.options.length <= 1) {
+    sel.innerHTML = '<option value="">All employees</option>' +
+      allEmps.map(function(e){
+        return '<option value="'+e.id+'">'+e.name+'</option>';
+      }).join('');
+  }
+
+  var filterEid = isAdmin ? (sel ? sel.value : '') : (cu ? cu.id : '');
+  var leaves = filterEid
+    ? allLeaves.filter(function(l){ return l.eid === filterEid; })
+    : allLeaves.slice();
+
+  // Sort latest first
+  leaves = leaves.slice().sort(function(a,b){
+    var da=a.applied||''; var db=b.applied||'';
+    if(db!==da) return db.localeCompare(da);
+    return (b.id||'').localeCompare(a.id||'');
+  });
+
+  var container = document.getElementById('timeline-container');
+  if(!container) return;
+
+  if (!leaves.length) {
+    container.innerHTML =
+      '<div class="card" style="padding:2rem;text-align:center;color:var(--tm);">No leave records found.</div>';
+    return;
+  }
+
+  var statusColor = {
+    'Approved':  { bg:'var(--g50)',    border:'var(--g600)',    dot:'#3B6D11' },
+    'Pending':   { bg:'var(--a50)',    border:'var(--a600)',    dot:'#854F0B' },
+    'Rejected':  { bg:'var(--r50)',    border:'var(--r600)',    dot:'#A32D2D' },
+    'Cancelled': { bg:'var(--gray50)', border:'var(--gray400)', dot:'#5F5E5A' }
+  };
+
+  var html = '<div style="position:relative;padding-left:2rem;">';
+  html += '<div style="position:absolute;left:7px;top:0;bottom:0;width:2px;background:var(--border);border-radius:1px;"></div>';
+
+  leaves.forEach(function(l) {
+    var emp = allEmps.find(function(e){ return e.id === l.eid; });
+    var sc = statusColor[l.status] || statusColor['Pending'];
+    var ri = allEmps.findIndex(function(x){ return x.id === l.eid; });
+    var isCross = l.from && l.to && l.from.substring(0,7) !== l.to.substring(0,7);
+
+    var cancelNote = l.cancelRequested
+      ? ' <span style="background:var(--a50);color:var(--a600);font-size:10px;padding:1px 6px;border-radius:4px;">Cancel Requested</span>'
+      : l.cancelRejected
+      ? ' <span style="background:var(--r50);color:var(--r600);font-size:10px;padding:1px 6px;border-radius:4px;">Cancel Rejected</span>'
+      : '';
+
+    html += '<div style="position:relative;margin-bottom:1rem;">';
+    // Timeline dot
+    html += '<div style="position:absolute;left:-1.55rem;top:14px;width:14px;height:14px;border-radius:50%;background:'+sc.dot+';border:2px solid #fff;box-shadow:0 0 0 2px '+sc.dot+';"></div>';
+    // Card
+    html += '<div style="background:'+sc.bg+';border:1px solid '+sc.border+';border-radius:12px;padding:12px 14px;">';
+    // Header row
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px;">';
+    html += '<div style="display:flex;align-items:center;gap:8px;">';
+    if (isAdmin && emp) {
+      html += '<div class="av '+avc(ri)+'" style="width:26px;height:26px;font-size:10px;">'+ini(emp.name)+'</div>';
+      html += '<span style="font-size:13px;font-weight:600;">'+emp.name+'</span>';
+    }
+    html += '<span class="badge '+(CBADGE[l.cat]||'bg-gr')+'" style="font-size:11px;">'+(l.type||l.cat||'Leave')+(l.isCompOff?' (Comp-Off)':'')+'</span>';
+    html += cancelNote;
+    html += '</div>';
+    html += '<span class="badge '+(l.status==='Approved'?'bg-g':l.status==='Rejected'||l.status==='Cancelled'?'bg-r':'bg-a')+'">'+l.status+'</span>';
+    html += '</div>';
+    // Details row
+    html += '<div style="display:flex;flex-wrap:wrap;gap:12px;font-size:12.5px;color:var(--ts);">';
+    html += '<span>📅 <strong>'+fd(l.from)+'</strong>'+(l.from!==l.to?' → <strong>'+fd(l.to)+'</strong>':'')+'</span>';
+    html += '<span>🕐 <strong>'+l.days+' day'+(l.days!==1?'s':'')+'</strong>'+(isCross?' <span style="font-size:10px;color:var(--p600);">[cross-month]</span>':'')+'</span>';
+    html += '<span style="color:var(--tm);">Applied: '+fd(l.applied)+'</span>';
+    html += '</div>';
+    // Reason
+    if (l.reason) {
+      html += '<div style="margin-top:7px;font-size:12px;color:var(--ts);background:rgba(255,255,255,.5);padding:6px 10px;border-radius:6px;">💬 '+l.reason+'</div>';
+    }
+    // Admin remark
+    if (l.remark) {
+      html += '<div style="margin-top:6px;font-size:12px;color:var(--ts);">📝 Admin: <em>'+l.remark+'</em></div>';
+    }
+    // Cancel reason
+    if (l.cancelReason) {
+      html += '<div style="margin-top:6px;font-size:12px;color:var(--a600);">🔄 Cancel reason: <em>'+l.cancelReason+'</em></div>';
+    }
+    // Cancel button — HR Rule 2
+    var todayStr = tod();
+    var canCancel = cu && cu.role==='employee' && !l.cancelRequested &&
+      (l.status==='Pending' || (l.status==='Approved' && l.to >= todayStr));
+    if (canCancel) {
+      var btnLabel = l.status==='Pending' ? 'Cancel Leave' : 'Request Cancellation';
+      html += '<div style="margin-top:8px;"><button onclick="reqCancel(\"'+l.id+'\")" style="font-size:11px;padding:4px 10px;border:1px solid var(--r600);border-radius:6px;background:#fff;color:var(--r600);cursor:pointer;">'+btnLabel+'</button></div>';
+    }
+    html += '</div></div>';
+  });
+
+  html += '</div>';
+  container.innerHTML = html;
 }
 
 // PWA Service Worker registration
