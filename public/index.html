@@ -1769,7 +1769,10 @@ function _drawBalanceChart(year) {
   var allE = allEmps;
   var names = allE.map(function(e){ return e.name.split(' ')[0]; });
 
-  // PL/Sick Used (deductible)
+  // All categories in ONE single stack per employee
+  // Order: PL/Sick Used | Remaining | Comp-Off | Overtime | Other Time Off | Vol Hrs | LOA
+
+  // 1. PL/Sick Used (deductible)
   var plSickUsed = allE.map(function(e){
     return allLeaves.filter(function(l){
       return l.eid===e.id && l.status==='Approved' && !isNonDeductible(l) &&
@@ -1777,66 +1780,90 @@ function _drawBalanceChart(year) {
     }).reduce(function(s,l){return s+(l.days||0);},0);
   });
 
-  // Remaining balance
-  var balLeft = allE.map(function(e,i){
+  // 2. Remaining balance (CF + Accrued - PL/Sick Used)
+  var remaining = allE.map(function(e,i){
     var accrued=calcAccrued(e.doj,year);
     var entitled=Math.round((e.cf+accrued)*100)/100;
     return Math.max(0,Math.round((entitled-plSickUsed[i])*100)/100);
   });
 
-  // Non-deductible categories — each separately
-  var cats = [
-    {key:'Comp-Off',      label:'Comp-Off',       color:'rgba(24,95,165,0.8)'},
-    {key:'Overtime',      label:'Overtime',        color:'rgba(133,79,11,0.8)'},
-    {key:'Other Time Off',label:'Other Time Off',  color:'rgba(83,74,183,0.8)'},
-    {key:'Volunteer Hours',label:'Volunteer Hrs',  color:'rgba(15,110,86,0.8)'},
-    {key:'Leave of Absence',label:'Leave of Absence',color:'rgba(153,60,29,0.8)'}
+  // 3. Non-deductible categories — each as separate dataset in SAME stack
+  var nonDeductCats = [
+    {key:'Comp-Off',         label:'Comp-Off',        color:'rgba(24,95,165,0.85)'},
+    {key:'Overtime',         label:'Overtime',         color:'rgba(133,79,11,0.85)'},
+    {key:'Other Time Off',   label:'Other Time Off',   color:'rgba(83,74,183,0.85)'},
+    {key:'Volunteer Hours',  label:'Volunteer Hrs',    color:'rgba(15,110,86,0.85)'},
+    {key:'Leave of Absence', label:'Leave of Absence', color:'rgba(153,60,29,0.85)'}
   ];
 
-  var catDatasets = cats.map(function(cat){
-    var data = allE.map(function(e){
-      return allLeaves.filter(function(l){
-        return l.eid===e.id && l.status==='Approved' &&
-               l.cat===cat.key && new Date(l.from).getFullYear()===year;
-      }).reduce(function(s,l){return s+(l.days||0);},0);
-    });
+  var nonDeductDatasets = nonDeductCats.map(function(cat){
     return {
       label: cat.label,
-      data: data,
+      data: allE.map(function(e){
+        return allLeaves.filter(function(l){
+          return l.eid===e.id && l.status==='Approved' &&
+                 l.cat===cat.key && new Date(l.from).getFullYear()===year;
+        }).reduce(function(s,l){return s+(l.days||0);},0);
+      }),
       backgroundColor: cat.color,
-      borderRadius: 4,
-      stack: 'other'
+      borderRadius: 0,
+      stack: 'single'  // ALL in same stack
     };
   });
 
   var ctx = document.getElementById('chart-balance');
   if(!ctx) return;
+
   chartInstances['balance'] = new Chart(ctx.getContext('2d'), {
-    type:'bar',
-    data:{
-      labels:names,
-      datasets:[
-        { label:'PL/Sick Used', data:plSickUsed, backgroundColor:'rgba(163,45,45,0.8)', borderRadius:4, stack:'pl' },
-        { label:'Remaining',    data:balLeft,    backgroundColor:'rgba(59,109,17,0.8)',  borderRadius:4, stack:'pl' },
-      ].concat(catDatasets)
+    type: 'bar',
+    data: {
+      labels: names,
+      datasets: [
+        {
+          label: 'PL/Sick Used',
+          data: plSickUsed,
+          backgroundColor: 'rgba(163,45,45,0.85)',
+          borderRadius: 0,
+          stack: 'single'
+        },
+        {
+          label: 'Remaining',
+          data: remaining,
+          backgroundColor: 'rgba(59,109,17,0.85)',
+          borderRadius: 0,
+          stack: 'single'
+        }
+      ].concat(nonDeductDatasets)
     },
-    options:{
-      indexAxis:'y',
-      responsive:true,
-      maintainAspectRatio:false,
-      plugins:{
-        legend:{ position:'bottom', labels:{ font:{size:10}, padding:6, boxWidth:12 } },
-        tooltip:{
-          callbacks:{
-            label:function(ctx){
-              return ctx.dataset.label+': '+ctx.parsed.x+' days';
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { font:{size:10}, padding:8, boxWidth:12 }
+        },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              if(ctx.parsed.x === 0) return null;
+              return ctx.dataset.label + ': ' + ctx.parsed.x + ' days';
             }
           }
         }
       },
-      scales:{
-        x:{ stacked:false, beginAtZero:true, ticks:{ font:{size:10} } },
-        y:{ ticks:{ font:{size:10} } }
+      scales: {
+        x: {
+          stacked: true,
+          beginAtZero: true,
+          ticks: { font:{size:10} },
+          title: { display:true, text:'Days', font:{size:11} }
+        },
+        y: {
+          stacked: true,
+          ticks: { font:{size:10} }
+        }
       }
     }
   });
