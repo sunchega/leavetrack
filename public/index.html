@@ -981,24 +981,41 @@ function renBal(){
   list.forEach(function(e){var o=document.createElement("option");o.value=e.id;o.textContent=e.name+" ("+e.id+")";sel.appendChild(o);});
   if(cu&&cu.role==="employee"){sel.value=cu.id;sel.style.display="none";}else{sel.style.display="";if(cur)sel.value=cur;}
   var id=sel.value;var e=ge(id);if(!e)return;
-  var used=empUsed(id);var bal=empBal(id);var ri=allEmps.indexOf(e);
-  document.getElementById("bal-hdr").innerHTML=(function(){
-    var accrued=calcAccrued(e.doj,new Date().getFullYear());
-    var totalEntitled=Math.round((e.cf+accrued)*100)/100;
-    return "<div style=\"background:var(--surface);border-radius:var(--radlg);border:1px solid var(--border);padding:1.25rem;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;gap:1rem;align-items:center;\">"+
-    "<div><div style=\"display:flex;align-items:center;gap:10px;\"><div class=\"av "+avc(ri)+"\" style=\"width:40px;height:40px;font-size:14px;\">"+ini(e.name)+"</div>"+
-    "<div><div style=\"font-size:15px;font-weight:700;\">"+e.name+"</div><div style=\"font-size:12px;color:var(--tm);\">"+e.id+" &bull; "+e.vendor+" &bull; "+e.role+"</div></div></div></div>"+
-    "<div style=\"text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--b600);\">"+e.cf+"</div><div style=\"font-size:11px;color:var(--tm);\">Carry Forward</div></div>"+
-    "<div style=\"text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--p600);\">"+accrued+"</div><div style=\"font-size:11px;color:var(--tm);\">Accrued (1.75/mo)</div></div>"+
-    "<div style=\"text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:#185FA5;\">"+totalEntitled+"</div><div style=\"font-size:11px;color:var(--tm);\">Total Entitled</div></div>"+
-    "<div style=\"text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--r600);\">"+used+"</div><div style=\"font-size:11px;color:var(--tm);\">PL/Sick Used</div></div>"+
-    "<div style=\"text-align:center;\"><div style=\"font-size:22px;font-weight:800;color:"+(bal<3?"var(--r600)":bal<8?"var(--a600)":"var(--g600)")+";\">"+ bal+"</div><div style=\"font-size:11px;color:var(--tm);\">Available Balance</div></div>"+
-    "</div>";
-  })()\">"+ bal+"</div><div style=\"font-size:11px;color:var(--tm);\">Balance Left</div></div></div>";
+  var used=empUsed(id);
+  var bal=empBal(id);
+  var ri=allEmps.indexOf(e);
+  var accrued=calcAccrued(e.doj,new Date().getFullYear());
+  var totalEntitled=Math.round((e.cf+accrued)*100)/100;
+  var hdrEl=document.getElementById("bal-hdr");
+  var hdrDiv=document.createElement("div");
+  hdrDiv.style.cssText="background:var(--surface);border-radius:var(--radlg);border:1px solid var(--border);padding:1.25rem;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr 1fr;gap:1rem;align-items:center;";
+  hdrDiv.innerHTML=
+    "<div><div style='display:flex;align-items:center;gap:10px;'><div class='av "+avc(ri)+"' style='width:40px;height:40px;font-size:14px;'>"+ini(e.name)+"</div>"+
+    "<div><div style='font-size:15px;font-weight:700;'>"+e.name+"</div>"+
+    "<div style='font-size:12px;color:var(--tm);'>"+e.id+" &bull; "+e.vendor+" &bull; "+e.role+"</div></div></div></div>"+
+    "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:var(--b600);'>"+e.cf+"</div><div style='font-size:11px;color:var(--tm);'>Carry Forward</div></div>"+
+    "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:var(--p600);'>"+accrued+"</div><div style='font-size:11px;color:var(--tm);'>Accrued (1.75/mo)</div></div>"+
+    "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:#185FA5;'>"+totalEntitled+"</div><div style='font-size:11px;color:var(--tm);'>Total Entitled</div></div>"+
+    "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:var(--r600);'>"+used+"</div><div style='font-size:11px;color:var(--tm);'>PL/Sick Used</div></div>"+
+    "<div style='text-align:center;'><div style='font-size:22px;font-weight:800;color:"+(bal<3?"var(--r600)":bal<8?"var(--a600)":"var(--g600)")+"'>"+bal+"</div><div style='font-size:11px;color:var(--tm);'>Available Balance</div></div>";
+  hdrEl.innerHTML="";hdrEl.appendChild(hdrDiv);
+
   var html="";
-  Object.keys(LCATS).forEach(function(cat){var color=CCOLOR[cat]||"#888";html+="<div class=\"balc\"><div class=\"balcat\">"+cat+"</div>";LCATS[cat].forEach(function(type){var tU=allLeaves.filter(function(l){return l.eid===id&&l.type===type&&l.status==="Approved";}).reduce(function(s,l){return s+l.days;},0);var pct=Math.min(100,Math.round((tU/Math.max(e.bal,1))*100));html+="<div style=\"margin-bottom:8px;\"><div class=\"balname\">"+type.split(/[>/]/).pop().trim()+"</div><div class=\"balbg\"><div class=\"balbar\" style=\"width:"+pct+"%;background:"+color+";\"></div></div><div class=\"balnums\"><span style=\"font-weight:600;\">"+tU+" used</span><span>of "+e.bal+"</span></div></div>";});html+="</div>";});
+  Object.keys(LCATS).forEach(function(cat){
+    var color=CCOLOR[cat]||"#888";
+    html+="<div class='balc'><div class='balcat'>"+cat+"</div>";
+    LCATS[cat].forEach(function(type){
+      var tU=allLeaves.filter(function(l){return l.eid===id&&l.type===type&&l.status==="Approved";}).reduce(function(s,l){return s+l.days;},0);
+      var pct=Math.min(100,Math.round((tU/Math.max(totalEntitled,1))*100));
+      html+="<div style='margin-bottom:8px;'><div class='balname'>"+type.split(/[>\/]/).pop().trim()+"</div>"+
+        "<div class='balbg'><div class='balbar' style='width:"+pct+"%;background:"+color+";'></div></div>"+
+        "<div class='balnums'><span style='font-weight:600;'>"+tU+" used</span><span>of "+totalEntitled+"</span></div></div>";
+    });
+    html+="</div>";
+  });
   document.getElementById("balg").innerHTML=html;
 }
+
 
 function renCal(){
   document.getElementById("cml").textContent=MONTHS[calM]+" "+calY;
@@ -1107,10 +1124,7 @@ async function runDataCorrection(){
     renEmp();renEmpM();renDash();renBal();
     // Show correction details
     if(res.details && res.details.length){
-      var detail=res.details.map(function(d){return d.emp+": "+d.days+" days ("+d.type+")";}).join("
-");
-      alert("Corrected "+res.corrected+" records:
-"+detail);
+      var detail=res.details.map(function(d){return d.emp+": "+d.days+" days";}).join(", ");showToast("Fixed "+res.corrected+" records: "+detail,"success");
     }
   }catch(e){}
 }
@@ -1293,8 +1307,7 @@ function expSummaryCSV() {
       getCatDays('Comp-Off'),getCatDays('Overtime'),getCatDays('Other Time Off'),
       getCatDays('Volunteer Hours'),getCatDays('Leave of Absence'),status]);
   });
-  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('
-');
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
   var a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
   a.download='EmployeeSummary_'+year+'.csv';a.click();
@@ -1357,7 +1370,7 @@ function expCSV(){
     var daysThisMonth=daysInMonthForLeave(l.from,l.to,year,selRM);
     rows.push([l.eid,e?e.name:"",e?e.vendor:"",e?e.role:"",l.cat,l.type,l.from,l.to,daysThisMonth,l.days,l.status,l.isCompOff?"Yes":"No",l.reason||"",l.applied]);
   });
-  var csv=rows.map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join("\n");
+  var csv=rows.map(function(r){return r.map(function(c){return "\""+String(c).replace(/"/g,"\"\"")+"\"";}).join(",");}).join(", ");
   var a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="leaves_"+MONTHS[selRM]+"_"+year+".csv";a.click();
   showToast("Month CSV exported.","success");
 }
