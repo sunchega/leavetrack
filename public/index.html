@@ -254,17 +254,19 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#FAFAFA;}
   /* Employee summary table */
   #summary-detail-card .tw table{min-width:800px;}
 
-  /* Balance header — responsive on mobile */
+  /* Balance header — stack on mobile */
   .bal-hdr-grid{
-    grid-template-columns:1fr 1fr 1fr!important;
-    gap:.5rem!important;
-    padding:1rem .75rem!important;
+    flex-wrap:wrap!important;
   }
   .bal-hdr-grid > div:first-child{
-    grid-column:1/-1!important;
+    flex:1 1 100%!important;
+    border-left:none!important;
+    border-bottom:1px solid var(--border);
   }
-  .bal-hdr-grid > div{
-    text-align:center;
+  .bal-hdr-grid > div:not(:first-child){
+    flex:1 1 30%!important;
+    border-left:none!important;
+    padding:.5rem .25rem!important;
   }
 
   /* Toast */
@@ -879,7 +881,8 @@ async function doLogout(){
 
 async function loadAll(){
   var er=await api("GET","/api/employees");
-  allEmps=er.filter(function(e){return !e.inactive;});
+  allEmps=er.filter(function(e){return !e.inactive;})
+    .sort(function(a,b){return a.name.localeCompare(b.name)});
   allLeaves=await api("GET","/api/leaves");
 }
 
@@ -1068,17 +1071,18 @@ function renBal(){
   var hdrEl=document.getElementById("bal-hdr");
   var lwp=empLWP(id);
   var hdrDiv=document.createElement("div");
-  hdrDiv.style.cssText="background:var(--surface);border-radius:var(--radlg);border:1px solid var(--border);padding:1.25rem;display:grid;grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:.75rem;align-items:center;";hdrDiv.className='bal-hdr-grid';
+  hdrDiv.style.cssText="background:var(--surface);border-radius:var(--radlg);border:1px solid var(--border);padding:1rem 1.25rem;display:flex;flex-wrap:nowrap;align-items:center;gap:0;width:100%;";hdrDiv.className='bal-hdr-grid';
+  var metricStyle="flex:1;text-align:center;padding:.5rem;border-left:1px solid var(--border);";
   hdrDiv.innerHTML=
-    "<div><div style='display:flex;align-items:center;gap:10px;'><div class='av "+avc(ri)+"' style='width:40px;height:40px;font-size:14px;'>"+ini(e.name)+"</div>"+
-    "<div><div style='font-size:15px;font-weight:700;'>"+e.name+"</div>"+
-    "<div style='font-size:12px;color:var(--tm);'>"+e.id+" &bull; "+e.vendor+" &bull; "+e.role+"</div></div></div></div>"+
-    "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:var(--b600);'>"+e.cf+"</div><div style='font-size:11px;color:var(--tm);'>Carry Forward</div></div>"+
-    "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:var(--p600);'>"+accrued+"</div><div style='font-size:11px;color:var(--tm);'>Accrued (1.75/mo)</div></div>"+
-    "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:#185FA5;'>"+totalEntitled+"</div><div style='font-size:11px;color:var(--tm);'>Total Entitled</div></div>"+
-    "<div style='text-align:center;'><div style='font-size:20px;font-weight:700;color:var(--r600);'>"+used+"</div><div style='font-size:11px;color:var(--tm);'>PL/Sick Used</div></div>"+
-    "<div style='text-align:center;'><div style='font-size:22px;font-weight:800;color:"+(bal<3?"var(--r600)":bal<8?"var(--a600)":"var(--g600)")+"'>"+bal+"</div><div style='font-size:11px;color:var(--tm);'>Available Balance</div></div>"+
-    "";
+    "<div style='display:flex;align-items:center;gap:10px;flex:2;padding:.5rem;min-width:0;'>"+
+    "<div class='av "+avc(ri)+"' style='width:36px;height:36px;font-size:13px;flex-shrink:0;'>"+ini(e.name)+"</div>"+
+    "<div style='min-width:0;'><div style='font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"+e.name+"</div>"+
+    "<div style='font-size:11px;color:var(--tm);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>"+e.id+" &bull; "+e.vendor+"</div></div></div>"+
+    "<div style='"+metricStyle+"'><div style='font-size:20px;font-weight:700;color:var(--b600);'>"+e.cf+"</div><div style='font-size:11px;color:var(--tm);'>Carry Forward</div></div>"+
+    "<div style='"+metricStyle+"'><div style='font-size:20px;font-weight:700;color:var(--p600);'>"+accrued+"</div><div style='font-size:11px;color:var(--tm);'>Accrued (1.75/mo)</div></div>"+
+    "<div style='"+metricStyle+"'><div style='font-size:20px;font-weight:700;color:#185FA5;'>"+totalEntitled+"</div><div style='font-size:11px;color:var(--tm);'>Total Entitled</div></div>"+
+    "<div style='"+metricStyle+"'><div style='font-size:20px;font-weight:700;color:var(--r600);'>"+used+"</div><div style='font-size:11px;color:var(--tm);'>PL/Sick Used</div></div>"+
+    "<div style='"+metricStyle+"'><div style='font-size:22px;font-weight:800;color:"+(bal<3?"var(--r600)":bal<8?"var(--a600)":"var(--g600)")+"'>"+bal+"</div><div style='font-size:11px;color:var(--tm);'>Available Balance</div></div>";
   hdrEl.innerHTML="";hdrEl.appendChild(hdrDiv);
 
 
@@ -1204,10 +1208,10 @@ async function saveEmp(){
   try{
     if(eeIdx){await api("PUT","/api/employees/"+eeIdx,{name:name,email:email,vendor:vendor,role:role,doj:doj,cf:cf,intake:intake});showToast("Employee updated successfully.","success");}
     else{await api("POST","/api/employees",{id:id,name:name,email:email,vendor:vendor,role:role,doj:doj,cf:cf,intake:intake,password:pw||"Pass@123"});showToast(name+" added successfully.","success");}
-    cm("mem");var er=await api("GET","/api/employees");allEmps=er.filter(function(e){return !e.inactive;});renEmp();renEmpM();popApplyEmp();
+    cm("mem");var er=await api("GET","/api/employees");allEmps=er.filter(function(e){return !e.inactive;}).sort(function(a,b){return a.name.localeCompare(b.name)});renEmp();renEmpM();popApplyEmp();
   }catch(e){}
 }
-function confRem(eid){var e=allEmps.find(function(x){return x.id===eid;});if(!e)return;document.getElementById("confmsg").textContent="Deactivate "+e.name+" ("+e.id+")?";document.getElementById("confok").onclick=async function(){try{await api("DELETE","/api/employees/"+eid);cm("mconf");showToast(e.name+" deactivated. Data preserved.","info");var er=await api("GET","/api/employees");allEmps=er.filter(function(e){return !e.inactive;});renEmp();renEmpM();popApplyEmp();}catch(ex){}};document.getElementById("mconf").classList.add("open");}
+function confRem(eid){var e=allEmps.find(function(x){return x.id===eid;});if(!e)return;document.getElementById("confmsg").textContent="Deactivate "+e.name+" ("+e.id+")?";document.getElementById("confok").onclick=async function(){try{await api("DELETE","/api/employees/"+eid);cm("mconf");showToast(e.name+" deactivated. Data preserved.","info");var er=await api("GET","/api/employees");allEmps=er.filter(function(e){return !e.inactive;}).sort(function(a,b){return a.name.localeCompare(b.name)});renEmp();renEmpM();popApplyEmp();}catch(ex){}};document.getElementById("mconf").classList.add("open");}
 function openCF(){document.getElementById("mcf").classList.add("open");}
 async function doCarryForward(){
   var year=document.getElementById("cf-year").value;
@@ -1217,7 +1221,7 @@ async function doCarryForward(){
     cm("mcf");
     showToast(res.message,"success");
     var er=await api("GET","/api/employees");
-    allEmps=er.filter(function(e){return !e.inactive;});
+    allEmps=er.filter(function(e){return !e.inactive;}).sort(function(a,b){return a.name.localeCompare(b.name)});
     renEmp();renEmpM();renBal();renDash();
   }catch(e){}
 }
