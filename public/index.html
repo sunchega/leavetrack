@@ -1174,7 +1174,8 @@ function showCalTip(cell, ds){
   tip.id="cal-tooltip";
   tip.dataset.ds=ds;
   tip.style.cssText="position:absolute;z-index:500;background:#fff;border:1px solid var(--border);"+
-    "border-radius:10px;padding:10px 12px;min-width:180px;box-shadow:0 4px 20px rgba(0,0,0,.12);font-size:12px;";
+    "border-radius:10px;padding:10px 12px;min-width:220px;max-width:280px;"+
+    "box-shadow:0 4px 20px rgba(0,0,0,.15);font-size:12px;max-height:280px;overflow-y:auto;";
   var date=new Date(ds);
   var dateStr=date.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
   tip.innerHTML="<div style='font-weight:700;color:var(--tp);margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px;'>"+
@@ -1189,14 +1190,25 @@ function showCalTip(cell, ds){
     }).join("")+
     "<div style='margin-top:8px;text-align:right;'><button onclick='closeCalTip()' "+
     "style='font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:#fff;cursor:pointer;color:var(--ts);'>Close</button></div>";
-  // Position near cell
-  var rect=cell.getBoundingClientRect();
-  var grid=document.getElementById("cgrid");
-  var gridRect=grid.getBoundingClientRect();
-  tip.style.top=(rect.bottom-gridRect.top+4)+"px";
-  tip.style.left=Math.min(rect.left-gridRect.left,gridRect.width-200)+"px";
+  // Position smart — above or below cell, always within grid bounds
   grid.style.position="relative";
   grid.appendChild(tip);
+  // Wait for tip to render to get its height
+  var rect=cell.getBoundingClientRect();
+  var gridRect=grid.getBoundingClientRect();
+  var tipH=tip.offsetHeight||200;
+  var tipW=tip.offsetWidth||200;
+  // Place above cell if below would overflow grid
+  var topBelow=rect.bottom-gridRect.top+4;
+  var topAbove=rect.top-gridRect.top-tipH-4;
+  var finalTop=topBelow+tipH>grid.offsetHeight ? Math.max(0,topAbove) : topBelow;
+  // Keep horizontally within grid
+  var leftPos=rect.left-gridRect.left;
+  var finalLeft=Math.min(Math.max(0,leftPos),grid.offsetWidth-tipW-8);
+  tip.style.top=finalTop+"px";
+  tip.style.left=finalLeft+"px";
+  tip.style.maxHeight="280px";
+  tip.style.overflowY="auto";
   // Close on outside click
   setTimeout(function(){
     document.addEventListener("click",function closeTip(ev){
