@@ -1144,7 +1144,7 @@ function renCal(){
     var hasMore=isAdm&&dl.length>2;
     var cellCls="dc "+(dl.length?"hl ":"")+(ds===t?"tod ":"");
     html+="<div class=\""+cellCls+"\"";
-    if(hasMore) html+=" onclick=\"showCalTip(this,'"+ds+"')\" style=\"cursor:pointer;\"";
+    if(hasMore) html+=" data-ds=\""+ds+"\" data-tip=\"1\"";
     html+="><div class=\"dn\">"+d+"</div>";
     if(isAdm){
       dl.slice(0,2).forEach(function(l){
@@ -1153,7 +1153,7 @@ function renCal(){
         var sc=leaveShort(l.type);
         html+="<span class=\"lpip\">"+nm+" <span style=\"background:rgba(83,74,183,.15);color:#3C3489;border-radius:3px;padding:0 3px;font-size:9px;font-weight:700;\">"+sc+"</span></span>";
       });
-      if(hasMore) html+="<span onclick=\"showCalTip(this.parentNode,'"+ds+"')\" style=\"font-size:9px;color:var(--p600);font-weight:600;cursor:pointer;\">+"+(dl.length-2)+" more</span>";
+      if(hasMore) html+="<span class=\"more-tip\" data-ds=\""+ds+"\" style=\"font-size:9px;color:var(--p600);font-weight:600;cursor:pointer;\">+"+(dl.length-2)+" more</span>";
     } else {
       dl.forEach(function(l){
         var sc=leaveShort(l.type);
@@ -1163,6 +1163,14 @@ function renCal(){
     html+="</div>";
   }
   document.getElementById("cgrid").innerHTML=html;
+  // Attach click events after render using event delegation
+  document.getElementById("cgrid").onclick=function(ev){
+    var cell=ev.target.closest("[data-tip='1']")||ev.target.closest(".more-tip");
+    if(cell){
+      var ds=cell.dataset.ds;
+      if(ds) showCalTip(cell.closest(".dc")||cell, ds);
+    }
+  };
 }
 // Calendar tooltip — shows ALL employees on a day
 function showCalTip(cell, ds){
