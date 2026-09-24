@@ -936,10 +936,12 @@ function renDash(){
       mc("var(--t50)","var(--t600)","<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/>",onL.length,"On leave today");
   }else{
     var e=ge(cu.id);var used=empUsed(cu.id);var b=empBal(cu.id);
+    var yr=new Date().getFullYear();
+    var accrued=e?calcAccrued(e.doj,yr):0;
     m.innerHTML=
-      mc("var(--p50)","var(--p600)","<circle cx=\"12\" cy=\"12\" r=\"10\"/>",(e?e.bal:0),"Total balance")+
       mc("var(--b50)","var(--b600)","<path d=\"M12 2v20\"/>",(e?e.cf:0),"Carry forward")+
-      mc("var(--r50)","var(--r600)","<circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/>",used,"Days used")+
+      mc("var(--p50)","var(--p600)","<circle cx=\"12\" cy=\"12\" r=\"10\"/>",accrued,"Accrued (1.75/mo)")+
+      mc("var(--r50)","var(--r600)","<circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16 14\"/>",used,"PL/Sick used")+
       mc("var(--g50)","var(--g600)","<polyline points=\"20 6 9 17 4 12\"/>",b,"Balance left");
   }
   // Sort all leaves by applied date latest first, then take top 8
