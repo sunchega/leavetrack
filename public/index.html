@@ -693,6 +693,25 @@ var MONTHS=["January","February","March","April","May","June","July","August","S
 var VBADGE={"Quess Corp":"vb-q","CTDI":"vb-c","Aforeserve":"vb-a","Eagle":"vb-e","Inovative":"vb-i"};
 var cu=null,calY=2026,calM=0,selRM=0,repYear=2026,eeIdx=null,adminPwTarget=null;
 
+// Leave type short codes for calendar
+var LEAVE_SHORT = {
+  "Privilege Leave":"PL","Additional Sick Leave":"SK","Sick Leave":"SK",
+  "Comp-Off":"CO","Overtime":"OT","Leave Without Pay":"LWP",
+  "Casual Leave":"CL","Paternity Leave":"PAT","Maternity Leave":"MAT",
+  "Bereavement Leave":"BRV","Optional Festival Holiday":"OFH",
+  "Unapproved Absence":"UA","Onsite Leave":"ONS",
+  "Volunteer Hours: Business Hours":"VH","Volunteer Hours: Non Business Hours":"VH",
+  "Birthday/Wedding Anniversary Leave":"ANV",
+  "LOA Educational":"LOA","LOA Furlough":"LOA","LOA Maternity/Paternity No Payment":"LOA",
+  "LOA Maternity Payment":"LOA","LOA Parental":"LOA","LOA Personal Leave No Payment":"LOA",
+  "LOA Personal Leave Payment":"LOA","LOA Sabbatical No Payment":"LOA",
+  "LOA Family Medical Leave Act":"LOA","LOA Jury Duty":"LOA",
+  "LOA Long Service Leave Payment":"LOA","LOA Workers Compensation":"LOA",
+  "Disability/Sickness Long Term Disability":"LTD","Disability/Sickness Short Term Disability":"STD",
+  "Disability/Sickness Long Term Sickness":"LTS","Disability/Sickness Short Term Sickness":"STS"
+};
+function leaveShort(type){ return LEAVE_SHORT[type] || (type?type.substring(0,2).toUpperCase():"?"); }
+
 // ── MOBILE SIDEBAR TOGGLE ─────────────────────────────────────────────────
 function toggleSidebar(){
   var sb=document.querySelector('.sidebar');
@@ -1001,7 +1020,7 @@ function renApSum(){
   var e=ge(id);if(!e){document.getElementById("apsum").innerHTML="";return;}
   var myL=allLeaves.filter(function(l){return l.eid===id;}).slice().reverse();
   var b=empBal(id);
-  document.getElementById("apsum").innerHTML="<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;\"><div style=\"background:var(--g50);border-radius:8px;padding:10px;text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--g800);\">"+b+"</div><div style=\"font-size:11px;color:var(--g600);\">Days remaining</div></div><div style=\"background:var(--p50);border-radius:8px;padding:10px;text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--p800);\">"+e.bal+"</div><div style=\"font-size:11px;color:var(--p600);\">Total balance</div></div></div><div style=\"font-size:12px;font-weight:600;color:var(--ts);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em;\">Recent requests</div>"+(myL.length?myL.map(function(l){return "<div style=\"display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);\"><div><div style=\"font-size:12.5px;font-weight:500;\">"+l.type.split(/[>/]/).pop().trim()+"</div><div style=\"font-size:11px;color:var(--tm);\">"+fd(l.from)+" to "+fd(l.to)+"</div></div><div style=\"display:flex;align-items:center;gap:5px;\"><span class=\"badge "+(l.status==="Approved"?"bg-g":l.status==="Cancelled"?"bg-gr":l.status==="Rejected"?"bg-r":l.cancelRequested?"bg-a":"bg-a")+"\" style=\"font-size:10.5px;\">"+(l.cancelRequested?"Cancel Req...":l.status)+"</span>"+(!l.cancelRequested&&(l.status==="Pending"||(l.status==="Approved"&&l.to>=tod()))?"<button onclick=\"reqCancel('"+l.id+"')\" style=\"font-size:10px;padding:2px 7px;border:1px solid var(--border);border-radius:5px;background:#fff;cursor:pointer;color:var(--r600);\" title=\"Request cancellation\">Cancel?</button>":"")+"</div></div>";}).join(""):"<p style=\"font-size:13px;color:var(--tm);\">No requests yet.</p>");
+  document.getElementById("apsum").innerHTML="<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;\"><div style=\"background:var(--g50);border-radius:8px;padding:10px;text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--g800);\">"+b+"</div><div style=\"font-size:11px;color:var(--g600);\">Days remaining</div></div><div style=\"background:var(--p50);border-radius:8px;padding:10px;text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--p800);\">"+Math.round((e.cf+calcAccrued(e.doj,new Date().getFullYear()))*100)/100+"</div><div style=\"font-size:11px;color:var(--p600);\">Total entitled</div></div></div><div style=\"font-size:12px;font-weight:600;color:var(--ts);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em;\">Recent requests</div>"+(myL.length?myL.map(function(l){return "<div style=\"display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);\"><div><div style=\"font-size:12.5px;font-weight:500;\">"+l.type.split(/[>/]/).pop().trim()+"</div><div style=\"font-size:11px;color:var(--tm);\">"+fd(l.from)+" to "+fd(l.to)+"</div></div><div style=\"display:flex;align-items:center;gap:5px;\"><span class=\"badge "+(l.status==="Approved"?"bg-g":l.status==="Cancelled"?"bg-gr":l.status==="Rejected"?"bg-r":l.cancelRequested?"bg-a":"bg-a")+"\" style=\"font-size:10.5px;\">"+(l.cancelRequested?"Cancel Req...":l.status)+"</span>"+(!l.cancelRequested&&(l.status==="Pending"||(l.status==="Approved"&&l.to>=tod()))?"<button onclick=\"reqCancel('"+l.id+"')\" style=\"font-size:10px;padding:2px 7px;border:1px solid var(--border);border-radius:5px;background:#fff;cursor:pointer;color:var(--r600);\" title=\"Request cancellation\">Cancel?</button>":"")+"</div></div>";}).join(""):"<p style=\"font-size:13px;color:var(--tm);\">No requests yet.</p>");
 }
 async function subLeave(){
   var btn=document.querySelector('button[onclick="subLeave()"]');
@@ -1121,6 +1140,51 @@ function renCal(){
   for(var d=1;d<=dim;d++){var ds=calY+"-"+String(calM+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");var dl=allLeaves.filter(function(l){return (fe?l.eid===fe:true)&&l.from<=ds&&l.to>=ds&&l.status==="Approved";});html+="<div class=\"dc "+(dl.length?"hl ":"")+(ds===t?"tod":"")+"\"><div class=\"dn\">"+d+"</div>";dl.slice(0,2).forEach(function(l){var e=ge(l.eid);html+="<span class=\"lpip\">"+(e?e.name.split(" ")[0]:l.eid)+"</span>";});if(dl.length>2)html+="<span style=\"font-size:9px;color:var(--tm);\">+"+(dl.length-2)+"</span>";html+="</div>";}
   document.getElementById("cgrid").innerHTML=html;
 }
+// Calendar tooltip — shows ALL employees on a day
+function showCalTip(cell, ds){
+  var existing=document.getElementById("cal-tooltip");
+  if(existing){ existing.remove(); if(existing.dataset.ds===ds) return; }
+  var dl=allLeaves.filter(function(l){ return l.from<=ds&&l.to>=ds&&l.status==="Approved"; });
+  if(!dl.length) return;
+  var tip=document.createElement("div");
+  tip.id="cal-tooltip";
+  tip.dataset.ds=ds;
+  tip.style.cssText="position:absolute;z-index:500;background:#fff;border:1px solid var(--border);"+
+    "border-radius:10px;padding:10px 12px;min-width:180px;box-shadow:0 4px 20px rgba(0,0,0,.12);font-size:12px;";
+  var date=new Date(ds);
+  var dateStr=date.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+  tip.innerHTML="<div style='font-weight:700;color:var(--tp);margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px;'>"+
+    dateStr+" — "+dl.length+" on leave</div>"+
+    dl.map(function(l){
+      var e=ge(l.eid);
+      var sc=leaveShort(l.type);
+      return "<div style='display:flex;justify-content:space-between;align-items:center;padding:3px 0;'>"+
+        "<span style='color:var(--tp);'>"+(e?e.name:l.eid)+"</span>"+
+        "<span style='background:var(--p100);color:var(--p800);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:8px;'>"+sc+"</span>"+
+        "</div>";
+    }).join("")+
+    "<div style='margin-top:8px;text-align:right;'><button onclick='closeCalTip()' "+
+    "style='font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:#fff;cursor:pointer;color:var(--ts);'>Close</button></div>";
+  // Position near cell
+  var rect=cell.getBoundingClientRect();
+  var grid=document.getElementById("cgrid");
+  var gridRect=grid.getBoundingClientRect();
+  tip.style.top=(rect.bottom-gridRect.top+4)+"px";
+  tip.style.left=Math.min(rect.left-gridRect.left,gridRect.width-200)+"px";
+  grid.style.position="relative";
+  grid.appendChild(tip);
+  // Close on outside click
+  setTimeout(function(){
+    document.addEventListener("click",function closeTip(ev){
+      if(!tip.contains(ev.target)&&ev.target!==cell){
+        tip.remove();
+        document.removeEventListener("click",closeTip);
+      }
+    });
+  },100);
+}
+
+function closeCalTip(){var t=document.getElementById("cal-tooltip");if(t)t.remove();}
 function prevM(){calM--;if(calM<0){calM=11;calY--;}renCal();}
 function nextM(){calM++;if(calM>11){calM=0;calY++;}renCal();}
 
