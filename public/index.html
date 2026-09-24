@@ -1137,7 +1137,31 @@ function renCal(){
   document.getElementById("cdl").innerHTML=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(function(d){return "<div class=\"dl\">"+d+"</div>";}).join("");
   var first=new Date(calY,calM,1).getDay();var dim=new Date(calY,calM+1,0).getDate();var t=tod();var html="";
   for(var i=0;i<first;i++)html+="<div class=\"dc om\"></div>";
-  for(var d=1;d<=dim;d++){var ds=calY+"-"+String(calM+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");var dl=allLeaves.filter(function(l){return (fe?l.eid===fe:true)&&l.from<=ds&&l.to>=ds&&l.status==="Approved";});html+="<div class=\"dc "+(dl.length?"hl ":"")+(ds===t?"tod":"")+"\"><div class=\"dn\">"+d+"</div>";dl.slice(0,2).forEach(function(l){var e=ge(l.eid);html+="<span class=\"lpip\">"+(e?e.name.split(" ")[0]:l.eid)+"</span>";});if(dl.length>2)html+="<span style=\"font-size:9px;color:var(--tm);\">+"+(dl.length-2)+"</span>";html+="</div>";}
+  for(var d=1;d<=dim;d++){
+    var ds=calY+"-"+String(calM+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
+    var dl=allLeaves.filter(function(l){return (fe?l.eid===fe:true)&&l.from<=ds&&l.to>=ds&&l.status==="Approved";});
+    var isAdm=cu&&cu.role==="admin";
+    var hasMore=isAdm&&dl.length>2;
+    var cellCls="dc "+(dl.length?"hl ":"")+(ds===t?"tod ":"");
+    html+="<div class=\""+cellCls+"\"";
+    if(hasMore) html+=" onclick=\"showCalTip(this,'"+ds+"')\" style=\"cursor:pointer;\"";
+    html+="><div class=\"dn\">"+d+"</div>";
+    if(isAdm){
+      dl.slice(0,2).forEach(function(l){
+        var e=ge(l.eid);
+        var nm=e?e.name.split(" ")[0]:l.eid;
+        var sc=leaveShort(l.type);
+        html+="<span class=\"lpip\">"+nm+" <span style=\"background:rgba(83,74,183,.15);color:#3C3489;border-radius:3px;padding:0 3px;font-size:9px;font-weight:700;\">"+sc+"</span></span>";
+      });
+      if(hasMore) html+="<span onclick=\"showCalTip(this.parentNode,'"+ds+"')\" style=\"font-size:9px;color:var(--p600);font-weight:600;cursor:pointer;\">+"+(dl.length-2)+" more</span>";
+    } else {
+      dl.forEach(function(l){
+        var sc=leaveShort(l.type);
+        html+="<span class=\"lpip\" style=\"font-weight:700;font-size:11px;\">"+sc+"</span>";
+      });
+    }
+    html+="</div>";
+  }
   document.getElementById("cgrid").innerHTML=html;
 }
 // Calendar tooltip — shows ALL employees on a day
