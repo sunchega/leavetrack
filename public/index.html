@@ -114,7 +114,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#FAFAFA;}
 .balname{font-size:12.5px;font-weight:600;color:var(--tp);margin-bottom:7px;line-height:1.3;}
 .balbg{height:5px;background:var(--gray50);border-radius:3px;overflow:hidden;margin-bottom:5px;}
 .balbar{height:5px;border-radius:3px;}.balnums{display:flex;justify-content:space-between;font-size:11px;color:var(--tm);}
-.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;}
+.cg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;overflow:hidden;width:100%;}
 .dl{text-align:center;font-size:10.5px;font-weight:600;color:var(--tm);padding:5px 0;}
 .dc{min-height:54px;border-radius:8px;border:1px solid transparent;padding:4px 5px;}
 .dc.hl{background:var(--p50);border-color:var(--p100);}.dc.tod{border-color:var(--p600)!important;}.dc.om{opacity:.3;}
@@ -472,7 +472,7 @@ tr:last-child td{border-bottom:none;}tr:hover td{background:#FAFAFA;}
     <!-- CALENDAR -->
     <div class="page" id="page-calendar">
       <div class="ph"><div><div class="pt" id="cal-page-title">My Leave Calendar</div><div class="ps">Approved leave calendar</div></div></div>
-      <div class="card">
+      <div class="card" style="overflow:hidden;">
         <div class="ch">
           <div style="display:flex;align-items:center;gap:10px;">
             <button class="bico" onclick="prevM()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>
@@ -1141,11 +1141,8 @@ function renCal(){
     var ds=calY+"-"+String(calM+1).padStart(2,"0")+"-"+String(d).padStart(2,"0");
     var dl=allLeaves.filter(function(l){return (fe?l.eid===fe:true)&&l.from<=ds&&l.to>=ds&&l.status==="Approved";});
     var isAdm=cu&&cu.role==="admin";
-    var hasMore=isAdm&&dl.length>2;
     var cellCls="dc "+(dl.length?"hl ":"")+(ds===t?"tod ":"");
-    html+="<div class=\""+cellCls+"\"";
-    if(hasMore) html+=" data-ds=\""+ds+"\" data-tip=\"1\"";
-    html+="><div class=\"dn\">"+d+"</div>";
+    html+="<div class=\""+cellCls+"\"><div class=\"dn\">"+d+"</div>";
     if(isAdm){
       dl.slice(0,2).forEach(function(l){
         var e=ge(l.eid);
@@ -1153,7 +1150,10 @@ function renCal(){
         var sc=leaveShort(l.type);
         html+="<span class=\"lpip\">"+nm+" <span style=\"background:rgba(83,74,183,.15);color:#3C3489;border-radius:3px;padding:0 3px;font-size:9px;font-weight:700;\">"+sc+"</span></span>";
       });
-      if(hasMore) html+="<span class=\"more-tip\" data-ds=\""+ds+"\" style=\"font-size:9px;color:var(--p600);font-weight:600;cursor:pointer;\">+"+(dl.length-2)+" more</span>";
+      if(dl.length>2){
+        var moreDs=ds;
+        html+="<span style=\"font-size:9px;color:var(--p600);font-weight:600;cursor:pointer;text-decoration:underline;\" onclick=\"calTip(event,'"+moreDs+"')\">+"+(dl.length-2)+" more</span>";
+      }
     } else {
       dl.forEach(function(l){
         var sc=leaveShort(l.type);
@@ -1163,69 +1163,68 @@ function renCal(){
     html+="</div>";
   }
   document.getElementById("cgrid").innerHTML=html;
-  // Attach click events after render using event delegation
-  document.getElementById("cgrid").onclick=function(ev){
-    var cell=ev.target.closest("[data-tip='1']")||ev.target.closest(".more-tip");
-    if(cell){
-      var ds=cell.dataset.ds;
-      if(ds) showCalTip(cell.closest(".dc")||cell, ds);
-    }
-  };
+}
+
+// Simple calendar tooltip trigger
+function calTip(ev, ds){
+  ev.stopPropagation();
+  showCalTip(ev.target, ds);
 }
 // Calendar tooltip — shows ALL employees on a day
 function showCalTip(cell, ds){
   var existing=document.getElementById("cal-tooltip");
-  if(existing){ existing.remove(); if(existing.dataset.ds===ds) return; }
+  if(existing){
+    var wasDs=existing.dataset.ds;
+    existing.remove();
+    if(wasDs===ds) return; // toggle off if same cell
+  }
   var dl=allLeaves.filter(function(l){ return l.from<=ds&&l.to>=ds&&l.status==="Approved"; });
   if(!dl.length) return;
   var tip=document.createElement("div");
   tip.id="cal-tooltip";
   tip.dataset.ds=ds;
-  tip.style.cssText="position:absolute;z-index:500;background:#fff;border:1px solid var(--border);"+
-    "border-radius:10px;padding:10px 12px;min-width:220px;max-width:280px;"+
-    "box-shadow:0 4px 20px rgba(0,0,0,.15);font-size:12px;max-height:280px;overflow-y:auto;";
+  tip.style.cssText="position:fixed;z-index:9999;background:#fff;border:1px solid #ddd;"+
+    "border-radius:10px;padding:12px 14px;min-width:220px;max-width:300px;"+
+    "box-shadow:0 8px 24px rgba(0,0,0,.18);font-size:12px;max-height:300px;overflow-y:auto;";
   var date=new Date(ds);
   var dateStr=date.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
-  tip.innerHTML="<div style='font-weight:700;color:var(--tp);margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px;'>"+
-    dateStr+" — "+dl.length+" on leave</div>"+
-    dl.map(function(l){
-      var e=ge(l.eid);
-      var sc=leaveShort(l.type);
-      return "<div style='display:flex;justify-content:space-between;align-items:center;padding:3px 0;'>"+
-        "<span style='color:var(--tp);'>"+(e?e.name:l.eid)+"</span>"+
-        "<span style='background:var(--p100);color:var(--p800);border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:8px;'>"+sc+"</span>"+
-        "</div>";
-    }).join("")+
-    "<div style='margin-top:8px;text-align:right;'><button onclick='closeCalTip()' "+
-    "style='font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:5px;background:#fff;cursor:pointer;color:var(--ts);'>Close</button></div>";
-  // Position smart — above or below cell, always within grid bounds
-  grid.style.position="relative";
-  grid.appendChild(tip);
-  // Wait for tip to render to get its height
+  var rows=dl.map(function(l){
+    var e=ge(l.eid);
+    var sc=leaveShort(l.type);
+    return "<div style='display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f0f0f0;'>"+
+      "<span style='color:#1a1a2e;font-size:12px;'>"+(e?e.name:l.eid)+"</span>"+
+      "<span style='background:#EEEDFE;color:#3C3489;border-radius:4px;padding:2px 7px;font-size:10px;font-weight:700;margin-left:8px;flex-shrink:0;'>"+sc+"</span>"+
+      "</div>";
+  }).join("");
+  tip.innerHTML=
+    "<div style='font-weight:700;color:#1a1a2e;margin-bottom:8px;font-size:13px;'>"+
+    dateStr+" — "+dl.length+" on leave</div>"+rows+
+    "<div style='margin-top:10px;text-align:right;'>"+
+    "<button onclick='closeCalTip()' style='font-size:11px;padding:3px 10px;border:1px solid #ddd;border-radius:5px;background:#fff;cursor:pointer;color:#555;'>Close</button>"+
+    "</div>";
+  document.body.appendChild(tip);
+  // Position near the clicked cell using fixed positioning
   var rect=cell.getBoundingClientRect();
-  var gridRect=grid.getBoundingClientRect();
-  var tipH=tip.offsetHeight||200;
-  var tipW=tip.offsetWidth||200;
-  // Place above cell if below would overflow grid
-  var topBelow=rect.bottom-gridRect.top+4;
-  var topAbove=rect.top-gridRect.top-tipH-4;
-  var finalTop=topBelow+tipH>grid.offsetHeight ? Math.max(0,topAbove) : topBelow;
-  // Keep horizontally within grid
-  var leftPos=rect.left-gridRect.left;
-  var finalLeft=Math.min(Math.max(0,leftPos),grid.offsetWidth-tipW-8);
-  tip.style.top=finalTop+"px";
-  tip.style.left=finalLeft+"px";
-  tip.style.maxHeight="280px";
-  tip.style.overflowY="auto";
+  var tipH=220; // estimated
+  var tipW=280;
+  var top=rect.bottom+6;
+  var left=rect.left;
+  // Flip up if too close to bottom
+  if(top+tipH>window.innerHeight-20) top=rect.top-tipH-6;
+  // Keep within viewport
+  if(left+tipW>window.innerWidth-10) left=window.innerWidth-tipW-10;
+  if(left<5) left=5;
+  tip.style.top=top+"px";
+  tip.style.left=left+"px";
   // Close on outside click
   setTimeout(function(){
     document.addEventListener("click",function closeTip(ev){
-      if(!tip.contains(ev.target)&&ev.target!==cell){
+      if(!tip.contains(ev.target)){
         tip.remove();
         document.removeEventListener("click",closeTip);
       }
     });
-  },100);
+  },50);
 }
 
 function closeCalTip(){var t=document.getElementById("cal-tooltip");if(t)t.remove();}
