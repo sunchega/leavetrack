@@ -914,6 +914,8 @@ function showApp(){
   document.getElementById("dht").textContent="Welcome, "+cu.name.split(" ")[0];
   var isAdmin=cu.role==="admin";
   ["mns","ni-approvals","ni-employees","ni-report","ni-charts"].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=isAdmin?"":"none";});
+  // Show Change Password for ALL users including admin
+  var pwEl=document.getElementById("ni-pwreset");if(pwEl)pwEl.style.display="";
   document.getElementById("cal-nav-lbl").textContent=isAdmin?"Team Calendar":"My Calendar";
   document.getElementById("cal-page-title").textContent=isAdmin?"Team Leave Calendar":"My Leave Calendar";
   document.getElementById("cef").style.display=isAdmin?"":"none";
@@ -1020,7 +1022,7 @@ function renApSum(){
   var e=ge(id);if(!e){document.getElementById("apsum").innerHTML="";return;}
   var myL=allLeaves.filter(function(l){return l.eid===id;}).slice().reverse();
   var b=empBal(id);
-  document.getElementById("apsum").innerHTML="<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;\"><div style=\"background:var(--g50);border-radius:8px;padding:10px;text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--g800);\">"+b+"</div><div style=\"font-size:11px;color:var(--g600);\">Days remaining</div></div><div style=\"background:var(--p50);border-radius:8px;padding:10px;text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--p800);\">"+Math.round((e.cf+calcAccrued(e.doj,new Date().getFullYear()))*100)/100+"</div><div style=\"font-size:11px;color:var(--p600);\">Total entitled</div></div></div><div style=\"font-size:12px;font-weight:600;color:var(--ts);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em;\">Recent requests</div>"+(myL.length?myL.map(function(l){return "<div style=\"display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);\"><div><div style=\"font-size:12.5px;font-weight:500;\">"+l.type.split(/[>/]/).pop().trim()+"</div><div style=\"font-size:11px;color:var(--tm);\">"+fd(l.from)+" to "+fd(l.to)+"</div></div><div style=\"display:flex;align-items:center;gap:5px;\"><span class=\"badge "+(l.status==="Approved"?"bg-g":l.status==="Cancelled"?"bg-gr":l.status==="Rejected"?"bg-r":l.cancelRequested?"bg-a":"bg-a")+"\" style=\"font-size:10.5px;\">"+(l.cancelRequested?"Cancel Req...":l.status)+"</span>"+(!l.cancelRequested&&(l.status==="Pending"||(l.status==="Approved"&&l.to>=tod()))?"<button onclick=\"reqCancel('"+l.id+"')\" style=\"font-size:10px;padding:2px 7px;border:1px solid var(--border);border-radius:5px;background:#fff;cursor:pointer;color:var(--r600);\" title=\"Request cancellation\">Cancel?</button>":"")+"</div></div>";}).join(""):"<p style=\"font-size:13px;color:var(--tm);\">No requests yet.</p>");
+  document.getElementById("apsum").innerHTML="<div style=\"display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:1rem;\"><div style=\"background:var(--g50);border-radius:8px;padding:10px;text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--g800);\">"+b+"</div><div style=\"font-size:11px;color:var(--g600);\">Days remaining</div></div><div style=\"background:var(--p50);border-radius:8px;padding:10px;text-align:center;\"><div style=\"font-size:20px;font-weight:700;color:var(--p800);\">"+Math.round((e.cf+calcAccrued(e.doj,new Date().getFullYear()))*100)/100+"</div><div style=\"font-size:11px;color:var(--p600);\">Total entitled</div></div></div><div style=\"font-size:12px;font-weight:600;color:var(--ts);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em;\">Recent requests</div>"+(myL.length?myL.map(function(l){return "<div style=\"display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);\"><div><div style=\"font-size:12.5px;font-weight:500;\">"+l.type.split(/[>/]/).pop().trim()+"</div><div style=\"font-size:11px;color:var(--tm);\">"+fd(l.from)+" to "+fd(l.to)+"</div></div><div style=\"display:flex;align-items:center;gap:5px;\"><span class=\"badge "+(l.status==="Approved"?"bg-g":l.status==="Cancelled"?"bg-gr":l.status==="Rejected"?"bg-r":l.cancelRequested?"bg-a":"bg-a")+"\" style=\"font-size:10.5px;\">"+(l.cancelRequested?"Cancel Req...":l.status)+"</span>"+(l.remark?"<div style=\"font-size:10px;color:var(--r600);margin-top:3px;\">📝 "+l.remark+"</div>":"")+(!l.cancelRequested&&(l.status==="Pending"||(l.status==="Approved"&&l.to>=tod()))?"<button onclick=\"reqCancel('"+l.id+"')\" style=\"font-size:10px;padding:2px 7px;border:1px solid var(--border);border-radius:5px;background:#fff;cursor:pointer;color:var(--r600);\" title=\"Request cancellation\">Cancel?</button>":"")+"</div></div>";}).join(""):"<p style=\"font-size:13px;color:var(--tm);\">No requests yet.</p>");
 }
 async function subLeave(){
   var btn=document.querySelector('button[onclick="subLeave()"]');
@@ -1248,13 +1250,67 @@ function renApp(){
   var ab=document.getElementById("abadge");var pc=allLeaves.filter(function(l){return l.status==="Pending";}).length;
   if(pc>0&&cu&&cu.role==="admin"){ab.textContent=pc;ab.style.display="inline";}else ab.style.display="none";
 }
-async function actLeave(id,status){
+// Remarks state
+var remarksAction={id:null,type:null,action:null};
+
+// Open remarks modal before reject or cancel
+function askRemarks(id, type, action){
+  remarksAction={id:id,type:type,action:action};
+  var title = type==="reject" ? "Reason for Rejection" :
+              type==="cancel" ? "Reason for Cancellation" : "Confirm Action";
+  var desc  = type==="reject"
+    ? "Please provide a reason for rejecting this leave. The employee will see this in their Leave Tracker."
+    : "Please provide a reason for cancelling this leave. The employee will see this in their Leave Tracker.";
+  document.getElementById("remarks-title").textContent=title;
+  document.getElementById("remarks-desc").textContent=desc;
+  document.getElementById("remarks-text").value="";
+  document.getElementById("remarks-err").style.display="none";
+  var btn=document.getElementById("remarks-confirm-btn");
+  btn.style.background=type==="reject"?"var(--r600)":"var(--a600)";
+  document.getElementById("m-remarks").classList.add("open");
+}
+
+// Submit remarks and perform action
+async function submitRemarks(){
+  var remarks=document.getElementById("remarks-text").value.trim();
+  if(!remarks){
+    document.getElementById("remarks-err").style.display="block";
+    return;
+  }
+  document.getElementById("remarks-err").style.display="none";
+  cm("m-remarks");
+  var id=remarksAction.id;
+  var type=remarksAction.type;
+  var action=remarksAction.action;
   try{
-    await api("PUT","/api/leaves/"+id,{status:status});
-    showToast("Leave "+status.toLowerCase()+" saved successfully.",status==="Approved"?"success":"danger");
-    allLeaves=await api("GET","/api/leaves");
-    renApp();renDash();renBal();renRep();
+    if(type==="reject"){
+      await api("PUT","/api/leaves/"+id,{status:"Rejected",remark:remarks});
+      showToast("Leave rejected. Reason saved for employee.","danger");
+      allLeaves=await api("GET","/api/leaves");
+      renApp();renDash();renBal();renRep();
+    } else if(type==="cancel"){
+      await api("POST","/api/leaves/"+id+"/process-cancel",{action:action,remark:remarks});
+      var msg=action==="approve"||action==="direct"?"Leave cancelled. Reason saved for employee.":"Cancellation request rejected.";
+      showToast(msg,"info");
+      allLeaves=await api("GET","/api/leaves");
+      renApp();renDash();renBal();renRep();
+    }
   }catch(e){}
+}
+
+async function actLeave(id,status){
+  if(status==="Approved"){
+    // Approve needs no remarks
+    try{
+      await api("PUT","/api/leaves/"+id,{status:status});
+      showToast("Leave approved successfully.","success");
+      allLeaves=await api("GET","/api/leaves");
+      renApp();renDash();renBal();renRep();
+    }catch(e){}
+  } else if(status==="Rejected"){
+    // Reject needs mandatory remarks
+    askRemarks(id,"reject","Rejected");
+  }
 }
 
 // CHANGE 3: Cancel request functions
@@ -1287,13 +1343,13 @@ async function reqCancel(id){
   }
 }
 async function processCancel(id,action){
-  try{
-    await api("POST","/api/leaves/"+id+"/process-cancel",{action:action});
-    var msg=action==="approve"||action==="direct"?"Leave cancelled. Balance credited back.":"Cancellation request rejected.";
-    showToast(msg,action==="reject"?"danger":"success");
-    allLeaves=await api("GET","/api/leaves");
-    renApp();renDash();renBal();renRep();
-  }catch(e){}
+  if(action==="approve"||action==="direct"){
+    // Cancelling an approved leave — needs mandatory remarks
+    askRemarks(id,"cancel",action);
+  } else {
+    // Rejecting a cancellation request — also needs remarks
+    askRemarks(id,"cancel",action);
+  }
 }
 
 function renEmp(){
@@ -1585,6 +1641,25 @@ function _doFullYearExport(year,ef){
   showToast("Full year Excel exported with 12 tabs — "+totalLeaves+" total records.","success");
 }
 </script>
+<!-- REMARKS MODAL — shown when admin rejects or cancels -->
+<div class="modal-overlay" id="m-remarks">
+  <div class="modal" style="max-width:440px;">
+    <div class="mh"><span class="mt" id="remarks-title">Reason for Rejection</span><button class="mclose" onclick="cm('m-remarks')">✕</button></div>
+    <div style="padding:1.25rem;">
+      <p style="font-size:13px;color:var(--ts);margin-bottom:1rem;" id="remarks-desc">Please provide a reason. The employee will see this in their Leave Tracker.</p>
+      <div class="fg">
+        <label>Remarks / Reason <span style="color:var(--r600);">*</span></label>
+        <textarea id="remarks-text" rows="4" placeholder="Enter reason or remarks..." style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--rad);font-size:13px;font-family:inherit;resize:vertical;"></textarea>
+        <div id="remarks-err" style="display:none;color:var(--r600);font-size:12px;margin-top:4px;">Remarks are mandatory. Please enter a reason.</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:1.25rem;justify-content:flex-end;">
+        <button class="btn btn-o" onclick="cm('m-remarks')">Cancel</button>
+        <button class="btn btn-p" id="remarks-confirm-btn" onclick="submitRemarks()">Confirm</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="pwa-banner" style="display:none;position:fixed;bottom:0;left:0;right:0;background:var(--sbg);color:#fff;padding:12px 16px;display:none;align-items:center;justify-content:space-between;gap:10px;z-index:9999;box-shadow:0 -2px 20px rgba(0,0,0,.3);">
   <div style="display:flex;align-items:center;gap:10px;">
     <div style="width:36px;height:36px;background:var(--p600);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M19 3H5a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2V5a2 2 0 00-2-2z"/></svg></div>

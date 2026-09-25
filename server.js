@@ -380,9 +380,10 @@ app.post('/api/leaves/:id/request-cancel', authRequired, async (req, res) => {
 // CHANGE 3b: Admin approves/rejects cancellation request OR directly cancels
 app.post('/api/leaves/:id/process-cancel', adminRequired, async (req, res) => {
   try {
-    const { action } = req.body; // 'approve' or 'reject' or 'direct'
+    const { action, remark } = req.body; // 'approve' or 'reject' or 'direct'
     const leave = await Leave.findOne({ id: req.params.id });
     if (!leave) return res.status(404).json({ error: 'Leave not found' });
+    if (remark) leave.remark = remark; // save admin remarks
 
     if (action === 'approve' || action === 'direct') {
       leave.status = 'Cancelled';
